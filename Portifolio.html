@@ -1,0 +1,1089 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Athul Krishna (mrz3r0), cyber security researcher. VAPT, bug bounty, DFIR and security education.">
+<meta name="theme-color" content="#06090a">
+<title>Athul Krishna</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=VT323&display=swap">
+<style>
+/* Layout: boot screen, then a single scrolling terminal session. Each section is a shell command whose output reveals on scroll. */
+:root{
+  --bg:#06090a;
+  --panel:rgba(10,17,15,.88);
+  --panel-solid:#0a110f;
+  --line:#1c2d25;
+  --fg:#cfe0d6;
+  --dim:#7a9488;
+  --accent:#58f0a0;
+  --red:#ff5468;
+  --amber:#f2b84b;
+  --cyan:#58c8f0;
+  --white:#ffffff;
+  --f-display:'VT323',ui-monospace,Menlo,Consolas,monospace;
+  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.7 var(--f-mono);-webkit-font-smoothing:antialiased}
+body.booting{overflow:hidden}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:40;background:var(--bg)}
+::selection{background:var(--accent);color:#04120a}
+a{color:var(--cyan)}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.gut{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.box{max-width:920px;margin:0 auto;min-width:0}
+#rain{position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;opacity:.26}
+main,header.bar,footer{position:relative;z-index:1}
+
+/* boot */
+#boot{position:fixed;inset:0;z-index:100;background:#020403;display:flex;flex-direction:column;justify-content:flex-end;
+  padding-top:max(16px,env(safe-area-inset-top,0px));padding-bottom:max(16px,env(safe-area-inset-bottom,0px));
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  transition:opacity .7s ease,filter .7s ease}
+#boot.off{opacity:0;filter:blur(6px);pointer-events:none}
+#boot::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.18) 0 1px,transparent 1px 3px)}
+#bootOut{max-width:920px;width:100%;margin:0 auto;overflow:hidden;font-size:13px;line-height:1.55;white-space:pre-wrap;word-break:break-word}
+.bl{color:#a8c4b6}
+.bl .ok{color:var(--accent)} .bl .warn{color:var(--amber)} .bl .bad{color:var(--red)} .bl .dim{color:#5d7569}
+.bl.big{font:400 clamp(30px,7vw,48px)/1 var(--f-display);color:var(--accent);margin:6px 0}
+#skip{position:absolute;right:max(16px,env(safe-area-inset-right,0px));top:max(14px,env(safe-area-inset-top,0px));z-index:2;background:none;border:1px solid #23372d;color:var(--dim);padding:6px 12px;border-radius:4px;cursor:pointer}
+#skip:hover{color:var(--accent);border-color:var(--accent)}
+.caret{display:inline-block;width:.55em;height:1.05em;vertical-align:-.15em;background:var(--accent);margin-left:2px;animation:blink 1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+
+/* nav */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:rgba(6,9,10,.9);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--line)}
+.bar-in{display:flex;align-items:center;gap:14px;height:46px}
+.brand{color:var(--accent);font-weight:700;white-space:nowrap;text-decoration:none}
+.links{display:flex;gap:2px;flex:1;min-width:0;overflow-x:auto;scrollbar-width:none}
+.links::-webkit-scrollbar{display:none}
+.links a{padding:6px 10px;color:var(--dim);text-decoration:none;white-space:nowrap;border-radius:4px}
+.links a:hover{color:var(--fg)}
+.links a.on{color:var(--accent);background:rgba(88,240,160,.09)}
+.tools{display:flex;gap:8px;align-items:center}
+.tools button{background:none;border:1px solid var(--line);color:var(--dim);padding:4px 9px;border-radius:4px;cursor:pointer;font-size:12px;white-space:nowrap}
+.tools button:hover{color:var(--accent);border-color:var(--accent)}
+.clock{color:var(--dim);font-variant-numeric:tabular-nums;font-size:12px}
+.prog{position:absolute;left:0;bottom:-1px;height:2px;width:100%;background:var(--accent);transform-origin:0 50%;transform:scaleX(0)}
+@media(max-width:700px){
+  .clock,.brand span{display:none}
+  .bar-in{flex-wrap:wrap;height:auto;padding-block:6px;row-gap:2px}
+  .brand{order:1}.tools{order:2;margin-left:auto}
+  .links{order:3;flex:1 0 100%;flex-wrap:wrap;overflow:visible}
+  .sec{scroll-margin-top:96px}
+}
+
+/* reveal */
+.js .rv{opacity:0;transform:translateY(16px);transition:opacity .6s ease,transform .6s ease;transition-delay:calc(var(--d,0)*80ms)}
+.js .rv.in{opacity:1;transform:none}
+
+/* sections */
+.sec{padding-block:72px;scroll-margin-top:50px}
+.cmd{color:var(--dim);margin:0 0 18px;min-height:1.7em;overflow-wrap:anywhere}
+.cmd .ps{color:var(--accent)}
+.cmd .t{color:var(--fg)}
+.h{font:400 clamp(30px,5.5vw,44px)/1.05 var(--f-display);margin:0 0 6px;letter-spacing:.02em;text-wrap:balance}
+.lead{color:var(--dim);margin:0 0 26px;max-width:62ch}
+.win{border:1px solid var(--line);background:var(--panel);border-radius:8px;overflow:hidden}
+.wt{display:flex;align-items:center;gap:7px;padding:9px 14px;border-bottom:1px solid var(--line);color:var(--dim);font-size:12px}
+.wt i{width:9px;height:9px;border-radius:50%;background:#2a3d34;display:block}
+.wt i:nth-child(1){background:var(--red)} .wt i:nth-child(2){background:var(--amber)} .wt i:nth-child(3){background:var(--accent)}
+.wt span{margin-left:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wb{padding:18px}
+
+/* hero */
+.hero{padding-top:56px;padding-bottom:40px}
+.eyebrow{color:var(--accent);margin:0 0 6px}
+.name{font:400 clamp(58px,13vw,128px)/.9 var(--f-display);margin:0;letter-spacing:.01em;position:relative;display:inline-block;color:var(--white)}
+.name::before,.name::after{content:attr(data-t);position:absolute;inset:0;pointer-events:none;opacity:0;color:var(--white)}
+.name::before{transform:translate(-3px,0);clip-path:inset(0 0 55% 0)}
+.name::after{transform:translate(3px,0);clip-path:inset(55% 0 0 0)}
+.name:hover::before,.name:hover::after,.name.gl::before,.name.gl::after{opacity:.85;animation:glitch .35s steps(2) 2}
+@keyframes glitch{0%{transform:translate(-3px,1px)}50%{transform:translate(3px,-1px)}100%{transform:translate(-2px,0)}}
+.role{font-size:clamp(15px,2.6vw,20px);margin:14px 0 0;color:var(--accent);min-height:1.7em}
+.about{max-width:62ch;margin:18px 0 26px;color:#b4c8bc}
+.cta{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:34px}
+.btn{display:inline-block;background:none;border:1px solid var(--accent);color:var(--accent);padding:9px 16px;border-radius:5px;cursor:pointer;text-decoration:none}
+.btn:hover{background:var(--accent);color:#04120a}
+.btn.alt{border-color:var(--line);color:var(--fg)}
+.btn.alt:hover{border-color:var(--accent);background:none;color:var(--accent)}
+.nf{display:grid;grid-template-columns:auto 1fr;gap:4px 18px}
+.nf dt{color:var(--accent);font-weight:700}
+.nf dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.nf .u{grid-column:1/-1;color:var(--fg);font-weight:700;border-bottom:1px dashed var(--line);padding-bottom:6px;margin-bottom:4px}
+.sw{display:flex;gap:0;margin-top:12px;grid-column:1/-1}
+.sw b{width:26px;height:14px;display:block}
+.counters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:22px}
+.ct{border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:14px 16px}
+.ct strong{display:block;font:400 clamp(38px,6vw,52px)/1 var(--f-display);color:var(--accent);font-variant-numeric:tabular-nums}
+.ct span{color:var(--dim);font-size:12px}
+@media(max-width:640px){.counters{grid-template-columns:repeat(2,1fr)}}
+
+/* scan */
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 14px}
+.filters button{background:none;border:1px solid var(--line);color:var(--dim);padding:5px 12px;border-radius:999px;cursor:pointer;font-size:12px}
+.filters button:hover{color:var(--fg)}
+.filters button[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);background:rgba(88,240,160,.08)}
+.scanhead,.row{display:grid;grid-template-columns:86px 46px minmax(0,1fr) minmax(0,1.3fr);gap:12px;align-items:baseline;text-align:left}
+.scanhead{color:var(--dim);font-size:12px;padding:0 10px 8px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.row{width:100%;background:none;border:0;border-radius:4px;padding:6px 10px;cursor:pointer}
+.row:hover{background:rgba(88,240,160,.07)}
+.row .port{color:var(--cyan)} .row .st{color:var(--accent)} .row .sv{font-weight:500} .row .nt{color:var(--dim)}
+.js .item{opacity:0;transform:translateX(-8px);transition:opacity .35s ease,transform .35s ease}
+.js .item.on{opacity:1;transform:none}
+.det{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+.det>div{overflow:hidden;min-height:0}
+.det p{margin:2px 10px 10px 104px;color:var(--dim);border-left:2px solid var(--accent);padding-left:12px}
+.item.open .det{grid-template-rows:1fr}
+.scandone{color:var(--dim);margin:14px 10px 0;font-size:12px}
+@media(max-width:560px){.scanhead,.row{grid-template-columns:78px 40px minmax(0,1fr)}.nt,.scanhead span:last-child{display:none}.det p{margin-left:10px}}
+
+/* git log */
+.log{display:flex;flex-direction:column;gap:12px}
+.commit{border:1px solid var(--line);background:var(--panel);border-radius:8px}
+.chead{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:6px 14px;align-items:baseline;width:100%;background:none;border:0;padding:14px 16px;text-align:left;cursor:pointer}
+.hash{color:var(--amber)}
+.ctitle{font-weight:700;overflow-wrap:anywhere}
+.ctitle em{font-style:normal;color:var(--accent);font-weight:500;font-size:12px;margin-left:8px}
+.when{color:var(--dim);font-size:12px;white-space:nowrap}
+.cbody{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+.cbody>div{overflow:hidden;min-height:0}
+.commit.open .cbody{grid-template-rows:1fr}
+.cin{padding:0 16px 16px 16px;border-top:1px dashed var(--line);margin:0 16px;padding:12px 0 16px}
+.org{color:var(--cyan);margin:0 0 6px}
+.cin ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+.cin li::marker{color:var(--accent)}
+.badge{display:inline-block;border:1px solid var(--accent);color:var(--accent);font-size:11px;padding:0 7px;border-radius:999px;margin-left:8px;vertical-align:1px}
+@media(max-width:520px){.chead{grid-template-columns:auto minmax(0,1fr)}.when{grid-column:2}}
+
+/* cards */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media(max-width:700px){.grid{grid-template-columns:minmax(0,1fr)}}
+.card{position:relative;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:18px;overflow:hidden;transition:border-color .2s}
+.card::before{content:"";position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .2s;background:radial-gradient(260px circle at var(--mx,50%) var(--my,50%),rgba(88,240,160,.13),transparent 70%)}
+.card:hover{border-color:#2f5442}
+.card:hover::before{opacity:1}
+.card h3{font:400 28px/1.05 var(--f-display);margin:0 0 8px}
+.card p{margin:0 0 12px;color:#b4c8bc}
+.tags{display:flex;flex-wrap:wrap;gap:6px}
+.tags span{font-size:11px;color:var(--cyan);border:1px solid #1d3b49;border-radius:4px;padding:1px 7px}
+.st-line{font-size:12px;color:var(--amber);margin:0 0 8px}
+.rank{font:400 64px/1 var(--f-display);color:var(--accent);margin:0 0 6px}
+.rank small{font-size:26px;color:var(--dim)}
+
+/* ctf */
+.blob{margin:0;border:1px dashed #2f5442;border-radius:6px;background:#050a08;padding:14px;color:var(--amber);overflow-x:auto;user-select:all;font-size:13px}
+.ctf p{margin:0 0 14px}
+.fform{display:flex;flex-wrap:wrap;gap:10px;margin:16px 0 0}
+.fform input{flex:1 1 220px;min-width:0;background:#050a08;border:1px solid var(--line);border-radius:5px;padding:9px 12px;color:var(--fg)}
+.fform input:focus{border-color:var(--accent);outline:none}
+.fmsg{margin:12px 0 0!important;min-height:1.7em;color:var(--dim)}
+.fmsg.bad{color:var(--red)} .fmsg.good{color:var(--accent)}
+.win.solved{border-color:var(--accent);box-shadow:0 0 0 1px rgba(88,240,160,.35),0 0 32px rgba(88,240,160,.12)}
+.shake{animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+
+/* contact + shell */
+.kv{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px 16px;align-items:center}
+.kv dt{color:var(--accent);font-weight:700}
+.kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.mini{background:none;border:1px solid var(--line);color:var(--dim);padding:3px 10px;border-radius:4px;cursor:pointer;font-size:12px;text-decoration:none;white-space:nowrap}
+.mini:hover{color:var(--accent);border-color:var(--accent)}
+@media(max-width:520px){.kv{grid-template-columns:minmax(0,1fr) auto}.kv dt{grid-column:1/-1;margin-bottom:-6px}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.chips button{background:none;border:1px solid var(--line);color:var(--dim);padding:4px 11px;border-radius:999px;cursor:pointer;font-size:12px}
+.chips button:hover{color:var(--accent);border-color:var(--accent)}
+#tout{max-height:360px;overflow-y:auto;overflow-x:hidden;white-space:pre-wrap;word-break:break-word;padding-right:4px}
+#tout .ln{margin:0}
+#tout .k{color:var(--accent)} #tout .c{color:var(--cyan)} #tout .a{color:var(--amber)} #tout .d{color:var(--dim)} #tout .r{color:var(--red)}
+#tform{display:flex;align-items:center;gap:8px;margin-top:10px;border-top:1px dashed var(--line);padding-top:10px}
+#tform label{color:var(--accent);white-space:nowrap}
+#cmd{flex:1;min-width:0;background:none;border:0;outline:none;color:var(--fg);caret-color:var(--accent)}
+footer{padding-block:36px 56px;color:var(--dim);font-size:12px}
+.foot{display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px;border-top:1px solid var(--line);padding-top:18px}
+.foot button{background:none;border:0;color:var(--accent);cursor:pointer;padding:0;text-decoration:underline}
+
+/* extra interactivity */
+#projects .grid{align-items:start}
+.dwd{margin-top:16px;border:1px dashed #2f5442;border-radius:6px;background:#050a08;padding:14px}
+.card .dwdlab{margin:0 0 10px;color:var(--dim);font-size:12px}
+.dwdout{margin-top:14px;font-size:12.5px;line-height:1.7;min-height:3em;overflow-wrap:anywhere}
+.dwdout div{margin:0 0 6px}
+.dwdtabs{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+.dwdtabs button{background:none;border:1px solid var(--line);color:var(--dim);padding:5px 14px;border-radius:999px;cursor:pointer;font-size:12px}
+.dwdtabs button:hover{color:var(--fg)}
+.dwdtabs button[aria-selected="true"]{border-color:var(--accent);color:var(--accent);background:rgba(88,240,160,.08)}
+.dwdout .r{color:var(--red)}
+.dwdout .ans.bad{border-color:var(--red);background:rgba(255,84,104,.07)}
+.dwdout .k{color:var(--accent)} .dwdout .a{color:var(--amber)} .dwdout .d{color:var(--dim)} .dwdout .c{color:var(--cyan)}
+.dwdout .hit{border-left:2px solid var(--accent);padding-left:10px;color:#b4c8bc}
+.dwdout .hit b{color:var(--amber);font-weight:500}
+.dwdout .ans{border:1px solid var(--accent);border-radius:6px;padding:10px 12px;color:var(--fg);background:rgba(88,240,160,.06)}
+.tk{cursor:pointer}
+.tk:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.card.tk:hover{border-color:var(--accent)}
+.card .hint{margin:10px 0 0;color:var(--dim);font-size:12px}
+.pdet{display:grid;grid-template-rows:0fr;transition:grid-template-rows .3s ease}
+.pdet>div{overflow:hidden;min-height:0}
+.card.open .pdet{grid-template-rows:1fr}
+.pdet pre{margin:12px 0 0;padding:10px 12px;border:1px dashed #2f5442;border-radius:6px;background:#050a08;color:var(--amber);white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.6}
+.pulse{animation:pulse .6s ease-out}
+@keyframes pulse{0%{box-shadow:inset 0 0 0 2px var(--accent),inset 0 0 28px rgba(88,240,160,.3)}100%{box-shadow:inset 0 0 0 2px transparent,inset 0 0 0 transparent}}
+.nf .hl{background:rgba(88,240,160,.1);border-radius:3px}
+.ct.tk:hover{border-color:var(--accent)}
+.cmd[data-type]{cursor:pointer}
+.name{cursor:pointer}
+.scandone.tk:hover{color:var(--accent)}
+.nfhint{margin:14px 0 0;color:var(--dim);font-size:12px}
+#toast{position:fixed;left:50%;bottom:calc(18px + env(safe-area-inset-bottom,0px));transform:translate(-50%,16px);opacity:0;transition:opacity .25s ease,transform .25s ease;z-index:60;background:var(--panel-solid);border:1px solid var(--accent);color:var(--fg);padding:8px 16px;border-radius:6px;max-width:calc(100% - 32px);pointer-events:none;text-align:center}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#topBtn{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:45;background:var(--panel-solid);border:1px solid var(--accent);color:var(--accent);padding:7px 12px;border-radius:6px;cursor:pointer}
+#topBtn:hover{background:var(--accent);color:#04120a}
+@media(prefers-reduced-motion:reduce){
+  .pulse{animation:none}
+  html{scroll-behavior:auto}
+  .js .rv,.js .item{opacity:1;transform:none;transition:none}
+  .caret{animation:none}
+  .name:hover::before,.name:hover::after{animation:none}
+}
+</style>
+<noscript><style>#boot{display:none}</style></noscript>
+<script>document.documentElement.classList.add('js')</script>
+
+<style>html{color-scheme:dark}body{margin:0}[hidden]{display:none!important}img{max-width:100%}</style>
+</head>
+<body>
+<canvas id="rain" aria-hidden="true"></canvas>
+
+<div id="boot" role="status" aria-label="Starting up">
+  <button id="skip" type="button">skip &#9656;</button>
+  <div id="bootOut"></div>
+</div>
+
+<header class="bar gut">
+  <div class="box bar-in">
+    <a class="brand" href="#home" data-go="home">&gt;_<span> mrz3r0</span></a>
+    <nav class="links" id="links" aria-label="Sections">
+      <a href="#home" data-go="home" class="on">home</a>
+      <a href="#skills" data-go="skills">skills</a>
+      <a href="#experience" data-go="experience">experience</a>
+      <a href="#projects" data-go="projects">projects</a>
+      <a href="#wins" data-go="wins">wins</a>
+      <a href="#ctf" data-go="ctf">ctf</a>
+      <a href="#shell" data-go="shell">shell</a>
+      <a href="#contact" data-go="contact">contact</a>
+    </nav>
+    <div class="tools">
+      <button type="button" id="rainBtn" aria-pressed="true">bits: on</button>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </div>
+  <div class="prog" id="prog"></div>
+</header>
+
+<main>
+  <!-- HOME -->
+  <section id="home" class="hero gut" aria-label="Introduction">
+    <div class="box">
+      <p class="eyebrow rv">// handle: mrz3r0</p>
+      <h1 class="name rv" id="nm" data-t="ATHUL KRISHNA" style="--d:1">ATHUL KRISHNA</h1>
+      <p class="role rv" style="--d:2"><span id="roleT"></span><span class="caret"></span></p>
+      <p class="about rv" style="--d:3">I'm a hands-on cybersecurity researcher working across VAPT, bug bounty and security education. I report valid vulnerabilities through responsible disclosure, and I run sessions that raise cybersecurity awareness. I like web and network security, and I'm always learning more.</p>
+      <div class="cta rv" style="--d:4">
+        <a class="btn" href="#experience" data-go="experience">View experience</a>
+        <a class="btn alt" href="#ctf" data-go="ctf">Capture the flag</a>
+        <a class="btn alt" href="#shell" data-go="shell">Open the shell</a>
+      </div>
+
+      <div class="win rv" style="--d:5">
+        <div class="wt"><i></i><i></i><i></i><span>mrz3r0@athul-os: ~</span></div>
+        <div class="wb">
+          <p class="cmd" style="margin-bottom:12px"><span class="ps">$</span> neofetch</p>
+          <dl class="nf">
+            <dt class="u">mrz3r0@athul-os</dt>
+            <dt>name</dt><dd>Athul Krishna</dd>
+            <dt>role</dt><dd>Cyber Security Researcher</dd>
+            <dt>focus</dt><dd>VAPT, bug bounty, DFIR, security education</dd>
+            <dt>edu</dt><dd>B.Tech CSE (Cyber Security), College of Engineering Kallooppara, 2022 to 2026</dd>
+            <dt>os</dt><dd>Kali, Parrot, BlackArch, Windows</dd>
+            <dt>cert</dt><dd>CRTA, Certified Red Team Analyst (CWL labs)</dd>
+            <dt>langs</dt><dd>English (fluent), Hindi (fluent)</dd>
+            <dt>where</dt><dd>Kerala, India</dd>
+            <div class="sw" aria-hidden="true"><b style="background:#ff5468"></b><b style="background:#f2b84b"></b><b style="background:#58f0a0"></b><b style="background:#58c8f0"></b><b style="background:#8a7cf0"></b><b style="background:#cfe0d6"></b></div>
+          </dl>
+        </div>
+      </div>
+
+      <div class="counters">
+        <div class="ct rv" style="--d:1"><strong data-count="3">0</strong><span>podium finishes</span></div>
+        <div class="ct rv" style="--d:2"><strong data-count="4">0</strong><span>roles held</span></div>
+        <div class="ct rv" style="--d:3"><strong data-count="3">0</strong><span>years in security</span></div>
+        <div class="ct rv" style="--d:4"><strong data-count="1">0</strong><span>red team cert earned</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SKILLS -->
+  <section id="skills" class="sec gut" aria-label="Skills">
+    <div class="box">
+      <p class="cmd rv" data-type="nmap -sV athul-os.local"><span class="ps">$</span> <span class="t"></span></p>
+      <h2 class="h rv">Open services</h2>
+      <p class="lead rv" style="--d:1">My toolkit, shown as a port scan. Click any line to see how I use it, or filter by type.</p>
+      <div class="win rv" style="--d:2" id="scan">
+        <div class="wb">
+          <div class="filters" id="filters" role="group" aria-label="Filter skills">
+            <button type="button" data-f="all" aria-pressed="true">all</button>
+            <button type="button" data-f="tools" aria-pressed="false">tools</button>
+            <button type="button" data-f="platforms" aria-pressed="false">platforms</button>
+            <button type="button" data-f="methods" aria-pressed="false">methodologies</button>
+          </div>
+          <div class="scanhead"><span>PORT</span><span>STATE</span><span>SERVICE</span><span>NOTE</span></div>
+          <div id="items">
+            <div class="item" data-g="tools"><button class="row" type="button" aria-expanded="false"><span class="port">8080/tcp</span><span class="st">open</span><span class="sv">Burp Suite</span><span class="nt">web app testing</span></button><div class="det"><div><p>Intercepting proxy for web application testing. This is where I find and prove XSS, IDOR and improper access control issues.</p></div></div></div>
+            <div class="item" data-g="tools"><button class="row" type="button" aria-expanded="false"><span class="port">80/tcp</span><span class="st">open</span><span class="sv">Nmap</span><span class="nt">discovery and enumeration</span></button><div class="det"><div><p>Host and service discovery during network VAPT, so I know what is exposed before I test it.</p></div></div></div>
+            <div class="item" data-g="tools"><button class="row" type="button" aria-expanded="false"><span class="port">443/tcp</span><span class="st">open</span><span class="sv">Wireshark</span><span class="nt">packet analysis</span></button><div class="det"><div><p>Packet capture and traffic analysis for network testing and investigation work.</p></div></div></div>
+            <div class="item" data-g="tools"><button class="row" type="button" aria-expanded="false"><span class="port">3306/tcp</span><span class="st">open</span><span class="sv">SQLmap</span><span class="nt">SQL injection checks</span></button><div class="det"><div><p>Automated detection and confirmation of SQL injection in web applications and APIs.</p></div></div></div>
+            <div class="item" data-g="tools"><button class="row" type="button" aria-expanded="false"><span class="port">4444/tcp</span><span class="st">open</span><span class="sv">Metasploit</span><span class="nt">exploit framework</span></button><div class="det"><div><p>Exploitation framework for validating findings and building proofs of concept.</p></div></div></div>
+            <div class="item" data-g="platforms"><button class="row" type="button" aria-expanded="false"><span class="port">22/tcp</span><span class="st">open</span><span class="sv">Kali Linux</span><span class="nt">offensive distro</span></button><div class="det"><div><p>Offensive security distribution for penetration testing.</p></div></div></div>
+            <div class="item" data-g="platforms"><button class="row" type="button" aria-expanded="false"><span class="port">2222/tcp</span><span class="st">open</span><span class="sv">Parrot OS</span><span class="nt">security distro</span></button><div class="det"><div><p>Security-focused distribution for pentesting and privacy-minded work.</p></div></div></div>
+            <div class="item" data-g="platforms"><button class="row" type="button" aria-expanded="false"><span class="port">6667/tcp</span><span class="st">open</span><span class="sv">BlackArch Linux</span><span class="nt">Arch-based pentest distro</span></button><div class="det"><div><p>Arch-based pentesting distribution with a very large toolset.</p></div></div></div>
+            <div class="item" data-g="platforms"><button class="row" type="button" aria-expanded="false"><span class="port">3389/tcp</span><span class="st">open</span><span class="sv">Windows</span><span class="nt">lab and engagement work</span></button><div class="det"><div><p>Windows environments for lab practice and engagement work.</p></div></div></div>
+            <div class="item" data-g="methods"><button class="row" type="button" aria-expanded="false"><span class="port">8443/tcp</span><span class="st">open</span><span class="sv">OWASP Top 10</span><span class="nt">web testing baseline</span></button><div class="det"><div><p>The baseline for my web application testing, and the source of the XSS, IDOR and access control work.</p></div></div></div>
+            <div class="item" data-g="methods"><button class="row" type="button" aria-expanded="false"><span class="port">9000/tcp</span><span class="st">open</span><span class="sv">MITRE ATT&amp;CK</span><span class="nt">adversary technique map</span></button><div class="det"><div><p>Framework for mapping adversary tactics and techniques in red team and threat modeling work.</p></div></div></div>
+          </div>
+          <p class="scandone item" id="scandone">Nmap done: 11 services up. Scan complete. Click to rescan.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- EXPERIENCE -->
+  <section id="experience" class="sec gut" aria-label="Experience">
+    <div class="box">
+      <p class="cmd rv" data-type="git log --oneline --career"><span class="ps">$</span> <span class="t"></span></p>
+      <h2 class="h rv">Work history</h2>
+      <p class="lead rv" style="--d:1">Four roles across pentesting, research, training and secure development. Click a commit to open it.</p>
+      <div class="log">
+        <article class="commit rv open" style="--d:1">
+          <button class="chead" type="button" aria-expanded="true"><span class="hash">e41c9a7</span><span class="ctitle">Freelance VAPT Analyst &amp; Bug Bounty Hunter</span><span class="when">2023 to present</span></button>
+          <div class="cbody"><div><div class="cin">
+            <ul>
+              <li>Reported valid vulnerabilities focused on web application flaws such as XSS, IDOR and improper access control.</li>
+              <li>Documented each finding with a clear proof of concept and recommended mitigations, following responsible disclosure practices.</li>
+            </ul>
+          </div></div></div>
+        </article>
+        <article class="commit rv" style="--d:2">
+          <button class="chead" type="button" aria-expanded="false"><span class="hash">b2d07f3</span><span class="ctitle">Cybersecurity Trainer</span><span class="when">present</span></button>
+          <div class="cbody"><div><div class="cin">
+            <p class="org">Offenso Hackers Academy</p>
+            <ul>
+              <li>Deliver hands-on training in ethical hacking, VAPT and web application security.</li>
+              <li>Run workshops, CTF sessions and practical labs, and mentor students in penetration testing methodology and security best practices.</li>
+              <li>Develop training materials and real-world cybersecurity challenges.</li>
+            </ul>
+          </div></div></div>
+        </article>
+        <article class="commit rv" style="--d:3">
+          <button class="chead" type="button" aria-expanded="false"><span class="hash">7a95e10</span><span class="ctitle">R&amp;D Head and Pentester</span><span class="when">2024 to 2026</span></button>
+          <div class="cbody"><div><div class="cin">
+            <p class="org">Cybernix</p>
+            <ul>
+              <li>Led cybersecurity R&amp;D and built security tools and proofs of concept.</li>
+              <li>Performed VAPT on web applications, APIs and networks.</li>
+              <li>Researched emerging threats, validated vulnerabilities and delivered technical reports with remediation recommendations.</li>
+              <li>Developed CTF challenges and mentored interns in offensive security.</li>
+            </ul>
+          </div></div></div>
+        </article>
+        <article class="commit rv" style="--d:4">
+          <button class="chead" type="button" aria-expanded="false"><span class="hash">19fc3d8</span><span class="ctitle">Cybersecurity Intern</span><span class="when">2025 to 2026</span></button>
+          <div class="cbody"><div><div class="cin">
+            <p class="org">Ugenix, healthcare app development project</p>
+            <ul>
+              <li>Worked with the development team to build security into the healthcare app from the ground up.</li>
+              <li>Reviewed how data is stored, accessed and protected to keep patient information safe and compliant.</li>
+              <li>Helped design and test authentication, authorization and other core security features.</li>
+              <li>Contributed to threat modeling sessions and shared ideas to strengthen the app's defenses.</li>
+            </ul>
+          </div></div></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- PROJECTS -->
+  <section id="projects" class="sec gut" aria-label="Projects">
+    <div class="box">
+      <p class="cmd rv" data-type="ls -la ~/projects"><span class="ps">$</span> <span class="t"></span></p>
+      <h2 class="h rv">Things I've built</h2>
+      <p class="lead rv" style="--d:1">CTFs, forensic training and tooling.</p>
+      <div class="grid">
+        <article class="card rv" style="--d:1;grid-column:1/-1">
+          <h3>Trazada Story</h3>
+          <p class="st-line">completed, created and run by me</p>
+          <p>A five-room insider threat CTF event built around a fictional breach at Nexora Technologies. It included the Red Rose Cyberforensics Workshop, a DFIR training scenario with detailed fabricated evidence across mobile, wearable and workstation devices.</p>
+          <div class="tags"><span>CTF</span><span>insider threat</span><span>5 rooms</span><span>DFIR</span></div>
+        </article>
+        <article class="card rv" id="dwd" style="--d:2;grid-column:1/-1">
+          <h3>DarkWatchDog</h3>
+          <p class="st-line">demo</p>
+          <p>A RAG-based analysis tool that checks leaked data. It looks up an email or domain against leak sources and answers questions about what was exposed. The demo below runs on made-up sample data, and nothing you type leaves this page.</p>
+          <div class="tags"><span>RAG</span><span>data leaks</span><span>threat intel</span><span>demo</span></div>
+          <div class="dwd">
+            <p class="dwdlab">darkwatchdog / demo &middot; sample data, simulated retrieval</p>
+            <div class="dwdtabs" role="tablist" aria-label="Demo mode">
+              <button type="button" role="tab" id="tabChk" data-m="chk" aria-selected="false">Check an email or domain</button>
+              <button type="button" role="tab" id="tabAsk" data-m="ask" aria-selected="true">Ask the leak</button>
+            </div>
+            <div id="paneAsk">
+            <div class="chips" id="dwdChips">
+              <button type="button" data-q="What data was exposed?">What data was exposed?</button>
+              <button type="button" data-q="Is anything for sale?">Is anything for sale?</button>
+              <button type="button" data-q="Were the passwords protected?">Were the passwords protected?</button>
+              <button type="button" data-q="Any payment card data?">Any payment card data?</button>
+              <button type="button" data-q="Where did it come from?">Where did it come from?</button>
+            </div>
+            <form class="fform" id="dwdForm" autocomplete="off" style="margin-top:0">
+              <label class="sr" for="dwdIn">Ask about the sample leak</label>
+              <input id="dwdIn" type="text" placeholder="Ask about the sample leak" spellcheck="false">
+              <button class="btn" type="submit">Ask</button>
+            </form>
+            </div>
+            <div id="paneChk" hidden>
+              <div class="chips" id="chkChips">
+                <button type="button" data-q="demo@acme-retail.test">demo@acme-retail.test</button>
+                <button type="button" data-q="sample@harbor-mail.test">sample@harbor-mail.test</button>
+                <button type="button" data-q="acme-retail.test">acme-retail.test</button>
+                <button type="button" data-q="someone@example.org">someone@example.org</button>
+              </div>
+              <form class="fform" id="chkForm" autocomplete="off" style="margin-top:0">
+                <label class="sr" for="chkIn">Email or domain to check</label>
+                <input id="chkIn" type="text" placeholder="Enter an email or domain" spellcheck="false" autocapitalize="off">
+                <button class="btn" type="submit">Check</button>
+              </form>
+            </div>
+            <div class="dwdout" id="dwdOut" aria-live="polite"></div>
+          </div>
+        </article>
+        <article class="card rv" style="--d:3">
+          <h3>Wi-Spy</h3>
+          <p class="st-line">contributor</p>
+          <p>A wireless reconnaissance tool I contribute to.</p>
+          <div class="tags"><span>wireless</span><span>recon</span><span>tooling</span></div>
+        </article>
+        <article class="card rv" style="--d:4">
+          <h3>Wi-Spy 2.0</h3>
+          <p class="st-line">automated pentesting tool</p>
+          <p>The upgrade of the wireless Wi-Spy tool. Version 2.0 automates the pentesting workflow and is built on a Raspberry Pi.</p>
+          <div class="tags"><span>automation</span><span>pentesting</span><span>Raspberry Pi</span><span>wireless</span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- WINS -->
+  <section id="wins" class="sec gut" aria-label="Achievements">
+    <div class="box">
+      <p class="cmd rv" data-type="cat achievements.txt"><span class="ps">$</span> <span class="t"></span></p>
+      <h2 class="h rv">Wins and community</h2>
+      <p class="lead rv" style="--d:1">Competitions, disclosures and sessions I've hosted.</p>
+      <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr))" id="podium">
+        <article class="card rv" style="--d:1"><p class="rank">2<small>nd</small></p><h3>Alibi CTF 2025</h3><div class="tags"><span>CTF</span></div></article>
+        <article class="card rv" style="--d:2"><p class="rank">2<small>nd</small></p><h3>Chaithanya CTF</h3><div class="tags"><span>CTF</span></div></article>
+        <article class="card rv" style="--d:3"><p class="rank">2<small>nd</small></p><h3>Tharang 2k26 Hackathon</h3><div class="tags"><span>hackathon</span></div></article>
+      </div>
+      <div class="grid" style="margin-top:14px">
+        <article class="card rv" style="--d:1"><h3>Valid disclosures</h3><p style="margin:0">Valid vulnerabilities reported through responsible disclosure.</p></article>
+        <article class="card rv" style="--d:2"><h3>Awareness sessions</h3><p style="margin:0">Hosted cybersecurity awareness sessions for IEEE and IEDC.</p></article>
+      </div>
+      <div class="win rv" style="margin-top:14px;--d:1">
+        <div class="wb"><p class="cmd" style="margin:0 0 6px"><span class="ps">$</span> cat certs.txt</p>
+          <p style="margin:0"><span style="color:var(--accent)">[earned]</span> CRTA, Certified Red Team Analyst, CWL labs</p>
+          <p style="margin:0"><span style="color:var(--amber)">[studying]</span> CompTIA Security+</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTF -->
+  <section id="ctf" class="sec gut" aria-label="Capture the flag">
+    <div class="box">
+      <p class="cmd rv" data-type="./challenge-01.sh --start"><span class="ps">$</span> <span class="t"></span></p>
+      <h2 class="h rv">Capture the flag</h2>
+      <p class="lead rv" style="--d:1">A small challenge in the style of the ones I write. Solve it to prove you read the logs.</p>
+      <div class="win ctf rv" id="ctfWin" style="--d:2">
+        <div class="wt"><i></i><i></i><i></i><span>challenge-01 / nexora-incident</span></div>
+        <div class="wb">
+          <p>Nexora Technologies, 02:14. A contractor account pulled the customer export and logged out. The proxy recorded a single value in the request. Recover what it says.</p>
+          <pre class="blob" id="blob">c3ludHthcmtiZW5fdmFmdnFyZV8wOTI0fQ==</pre>
+          <form class="fform" id="fform" autocomplete="off">
+            <label class="sr" for="flagIn">Flag</label>
+            <input id="flagIn" type="text" placeholder="flag{...}" spellcheck="false" autocapitalize="off" autocorrect="off">
+            <button class="btn" type="submit">Submit</button>
+            <button class="btn alt" type="button" id="hintBtn">Hint</button>
+          </form>
+          <p class="fmsg" id="fmsg" role="status">Flag format: flag{...}. The shell below has the tools you need.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SHELL -->
+  <section id="shell" class="sec gut" aria-label="Interactive shell">
+    <div class="box">
+      <p class="cmd rv" data-type="ssh visitor@athul-os.local"><span class="ps">$</span> <span class="t"></span></p>
+      <h2 class="h rv">Interactive shell</h2>
+      <p class="lead rv" style="--d:1">Everything on this page is also a command. Tap a shortcut or type your own. Try <b>help</b>. Press <b>/</b> from anywhere to jump here.</p>
+      <div class="win rv" style="--d:2">
+        <div class="wt"><i></i><i></i><i></i><span>visitor@athul-os: ~</span></div>
+        <div class="wb">
+          <div class="chips" id="chips">
+            <button type="button" data-c="help">help</button>
+            <button type="button" data-c="about">about</button>
+            <button type="button" data-c="skills">skills</button>
+            <button type="button" data-c="projects">projects</button>
+            <button type="button" data-c="wins">wins</button>
+            <button type="button" data-c="contact">contact</button>
+            <button type="button" data-c="neofetch">neofetch</button>
+          </div>
+          <div id="tout" aria-live="polite"></div>
+          <form id="tform" autocomplete="off">
+            <label for="cmd">visitor@athul-os:~$</label>
+            <input id="cmd" type="text" spellcheck="false" autocapitalize="off" autocorrect="off" autocomplete="off" placeholder="type a command">
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section id="contact" class="sec gut" aria-label="Contact">
+    <div class="box">
+      <p class="cmd rv" data-type="cat contact.txt"><span class="ps">$</span> <span class="t"></span></p>
+      <h2 class="h rv">Get in touch</h2>
+      <p class="lead rv" style="--d:1">Security work, collaborations, workshops or CTF ideas.</p>
+      <div class="win rv" style="--d:2">
+        <div class="wb">
+          <dl class="kv">
+            <dt>email</dt><dd id="mail">jathul922004@gmail.com</dd><dd><button class="mini" type="button" data-copy="mail">copy</button></dd>
+            <dt>linkedin</dt><dd id="li">linkedin.com/in/0924at</dd><dd><a class="mini" href="https://www.linkedin.com/in/0924at" target="_blank" rel="noopener">open</a></dd>
+          </dl>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="gut">
+  <div class="box foot">
+    <span>&copy; 2026 Athul Krishna (mrz3r0). Session ended cleanly.</span>
+    <button type="button" id="rebootBtn">reboot</button>
+  </div>
+</footer>
+
+<script>
+(function(){
+'use strict';
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var reduced=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+function store(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+
+/* ---------- matrix rain ---------- */
+var cv=$('#rain'),cx=cv.getContext('2d'),rainOn=!reduced,boost=0,drops=[],size=16,W=0,H=0,last=0;
+var glyphs='01';
+function sizeRain(){
+  var dpr=Math.min(2,window.devicePixelRatio||1);
+  W=window.innerWidth;H=window.innerHeight;
+  cv.width=W*dpr;cv.height=H*dpr;cx.setTransform(dpr,0,0,dpr,0,0);
+  var cols=Math.ceil(W/size);drops=[];
+  for(var i=0;i<cols;i++)drops.push(Math.random()*H/size);
+  cx.fillStyle='#06090a';cx.fillRect(0,0,W,H);
+}
+function frame(t){
+  requestAnimationFrame(frame);
+  if(!rainOn||document.hidden||t-last<42)return;
+  last=t;
+  cx.fillStyle='rgba(6,9,10,.1)';cx.fillRect(0,0,W,H);
+  cx.font=size+'px '+'JetBrains Mono, monospace';
+  for(var i=0;i<drops.length;i++){
+    var y=drops[i]*size;
+    cx.fillStyle=Math.random()>.97?'#d6ffe9':'#58f0a0';
+    cx.fillText(glyphs.charAt(Math.floor(Math.random()*glyphs.length)),i*size,y);
+    if(y>H&&Math.random()>.975)drops[i]=0;
+    drops[i]+=1+boost;
+  }
+  if(boost>0)boost=Math.max(0,boost-.01);
+}
+sizeRain();window.addEventListener('resize',sizeRain);requestAnimationFrame(frame);
+function setRain(on){
+  rainOn=on;$('#rainBtn').textContent='bits: '+(on?'on':'off');$('#rainBtn').setAttribute('aria-pressed',String(on));
+  if(!on){cx.fillStyle='#06090a';cx.fillRect(0,0,W,H)}
+}
+$('#rainBtn').addEventListener('click',function(){setRain(!rainOn)});
+if(reduced)setRain(false);
+
+/* ---------- boot ---------- */
+var boot=$('#boot'),out=$('#bootOut'),booting=false,skipped=false,abort=null,started=false;
+function wait(ms){return new Promise(function(res,rej){
+  if(skipped){rej();return}
+  var t=setTimeout(res,reduced?0:ms);abort=function(){clearTimeout(t);rej()};
+})}
+function bl(html,cls){var d=document.createElement('div');d.className='bl '+(cls||'');d.innerHTML=html;out.appendChild(d);
+  while(out.children.length>60)out.removeChild(out.firstChild);return d}
+function typeText(el,text,ms){return new Promise(function(res,rej){
+  if(reduced||skipped){el.textContent=text;skipped?rej():res();return}
+  var i=0;var iv=setInterval(function(){
+    if(skipped){clearInterval(iv);rej();return}
+    el.textContent=text.slice(0,++i);if(i>=text.length){clearInterval(iv);res()}
+  },ms);
+})}
+var OK='<span class="ok">[  OK  ]</span> ';
+async function runBoot(){
+  booting=true;skipped=false;out.innerHTML='';
+  boot.hidden=false;boot.classList.remove('off');document.body.classList.add('booting');window.scrollTo(0,0);
+  try{
+    bl('ATHUL-OS BIOS v2026.10  (c) mrz3r0 labs','dim');await wait(180);
+    var mem=bl('Memory test: 0 MB');
+    for(var m=0;m<=16384;m+=2048){mem.textContent='Memory test: '+m+' MB'+(m===16384?'  OK':'');await wait(55)}
+    bl('Detecting devices ...... keyboard, display, network','dim');await wait(260);
+    bl('Booting kernel 6.mrz3r0-security','dim');await wait(300);
+    var steps=[
+      'Mounted /home/mrz3r0',
+      'Loaded modules: burpsuite nmap wireshark sqlmap metasploit',
+      'Started vapt.service',
+      'Started bugbounty-recon.service',
+      'Started dfir.service',
+      'Started ctf-builder.service',
+      'Started awareness-sessions.service',
+      'Reached target Offensive Security'
+    ];
+    for(var i=0;i<steps.length;i++){bl(OK+steps[i]);await wait(150)}
+    bl('<span class="warn">[ WARN ]</span> sleep.service not found, continuing');await wait(260);
+    var pb=bl('');
+    for(var p=0;p<=20;p+=1){pb.textContent='Loading portfolio  ['+new Array(p+1).join('#')+new Array(21-p).join('.')+']  '+(p*5)+'%';await wait(38)}
+    await wait(240);
+    bl('');bl('ATHUL-OS 2026.10  tty1','big');
+    var lg=bl('athul-os login: <span id="lg"></span><span class="caret"></span>');
+    await wait(400);await typeText($('#lg'),'mrz3r0',110);await wait(260);
+    lg.querySelector('.caret').remove();
+    var pw=bl('Password: <span id="pw"></span><span class="caret"></span>');
+    await wait(200);await typeText($('#pw'),'••••••••',70);await wait(300);
+    pw.querySelector('.caret').remove();
+    bl('<span class="ok">Access granted.</span> Last login: '+new Date().toDateString()+' on tty1');await wait(350);
+    bl('Welcome, visitor. Starting session ...');await wait(650);
+  }catch(e){}
+  finish();
+}
+function finish(){
+  booting=false;boot.classList.add('off');document.body.classList.remove('booting');
+  setTimeout(function(){if(!booting)boot.hidden=true},750);
+  startSite();
+}
+function doSkip(){if(!booting||skipped)return;skipped=true;if(abort)abort()}
+$('#skip').addEventListener('click',doSkip);
+boot.addEventListener('click',doSkip);
+document.addEventListener('keydown',function(){doSkip()});
+
+/* ---------- site start: reveals, typing, counters ---------- */
+function typeCmd(el){
+  var t=$('.t',el),s=el.getAttribute('data-type')||'';
+  if(!t||t.textContent)return;
+  if(reduced){t.textContent=s;return}
+  var i=0,iv=setInterval(function(){t.textContent=s.slice(0,++i);if(i>=s.length)clearInterval(iv)},32);
+}
+function countUp(el){
+  var n=+el.getAttribute('data-count'),t0=performance.now(),d=1100;
+  if(reduced){el.textContent=n;return}
+  (function f(t){var p=Math.min(1,(t-t0)/d);el.textContent=Math.round(n*(1-Math.pow(1-p,3)));if(p<1)requestAnimationFrame(f)})(t0);
+}
+function runScan(el){
+  var items=$$('.item',el);
+  items.forEach(function(r,i){setTimeout(function(){r.classList.add('on')},reduced?0:i*110)});
+}
+function onReveal(el){
+  if(el.hasAttribute('data-type'))typeCmd(el);
+  $$('[data-count]',el).forEach(countUp);
+  if(el.id==='scan')runScan(el);
+  if(el.id==='nm'){el.classList.add('gl');setTimeout(function(){el.classList.remove('gl')},800)}
+}
+var roleWords=['Cyber Security Researcher','VAPT Analyst','Bug Bounty Hunter','DFIR Enthusiast','CTF Builder'];
+function roleLoop(){
+  var el=$('#roleT'),w=0,i=0,del=false;
+  if(reduced){el.textContent=roleWords[0];return}
+  (function tick(){
+    var word=roleWords[w];
+    if(!del){el.textContent=word.slice(0,++i);if(i===word.length){del=true;return void setTimeout(tick,1800)}}
+    else{el.textContent=word.slice(0,--i);if(i===0){del=false;w=(w+1)%roleWords.length}}
+    setTimeout(tick,del?28:65);
+  })();
+}
+/* backup: reveal anything already on screen if the observer missed it */
+function sweep(){
+  $$('.rv:not(.in)').forEach(function(e){
+    if(e.getBoundingClientRect().top<window.innerHeight*0.96){e.classList.add('in');onReveal(e)}
+  });
+}
+function startSite(){
+  if(started)return;started=true;
+  roleLoop();
+  var all=$$('.rv');
+  if(!('IntersectionObserver' in window)){all.forEach(function(e){e.classList.add('in');onReveal(e)});$$('.item').forEach(function(e){e.classList.add('on')});return}
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){var was=e.target.classList.contains('in');e.target.classList.add('in');io.unobserve(e.target);if(!was)onReveal(e.target)}
+  })},{threshold:.12,rootMargin:'0px 0px -6% 0px'});
+  all.forEach(function(e){io.observe(e)});
+  var secs=$$('main section'),links=$$('#links a');
+  var spy=new IntersectionObserver(function(es){es.forEach(function(e){
+    if(e.isIntersecting){links.forEach(function(a){a.classList.toggle('on',a.getAttribute('data-go')===e.target.id)});
+      var on=$('#links a.on'),bar=$('#links');
+      if(on&&bar)bar.scrollLeft=on.offsetLeft-(bar.clientWidth-on.offsetWidth)/2}
+  })},{rootMargin:'-40% 0px -55% 0px'});
+  secs.forEach(function(s){spy.observe(s)});
+}
+
+/* ---------- nav, progress, clock ---------- */
+function go(id){var el=document.getElementById(id);if(el)el.scrollIntoView({behavior:reduced?'auto':'smooth',block:'start'})}
+document.addEventListener('click',function(e){
+  var a=e.target.closest&&e.target.closest('[data-go]');
+  if(a){e.preventDefault();go(a.getAttribute('data-go'))}
+});
+var prog=$('#prog'),tick=false;
+window.addEventListener('scroll',function(){
+  if(tick)return;tick=true;requestAnimationFrame(function(){
+    var h=document.documentElement.scrollHeight-window.innerHeight;
+    prog.style.transform='scaleX('+(h>0?Math.min(1,window.scrollY/h):0)+')';tick=false;
+    if(started)sweep();
+    boost=Math.max(boost,.6);
+  });
+},{passive:true});
+function clock(){$('#clock').textContent=new Date().toLocaleTimeString('en-GB')}
+clock();setInterval(clock,1000);
+
+/* ---------- skills: filter + expand ---------- */
+$('#filters').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  var f=b.getAttribute('data-f');
+  $$('#filters button').forEach(function(x){x.setAttribute('aria-pressed',String(x===b))});
+  $$('#items .item').forEach(function(it){it.hidden=!(f==='all'||it.getAttribute('data-g')===f)});
+});
+$('#items').addEventListener('click',function(e){
+  var b=e.target.closest('.row');if(!b)return;
+  var it=b.parentNode,open=!it.classList.contains('open');
+  it.classList.toggle('open',open);b.setAttribute('aria-expanded',String(open));
+});
+/* ---------- experience accordion ---------- */
+$$('.chead').forEach(function(b){b.addEventListener('click',function(){
+  var c=b.parentNode,open=!c.classList.contains('open');
+  c.classList.toggle('open',open);b.setAttribute('aria-expanded',String(open));
+})});
+/* ---------- card glow ---------- */
+$$('.card').forEach(function(c){c.addEventListener('pointermove',function(e){
+  var r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px');
+})});
+/* ---------- copy ---------- */
+$$('[data-copy]').forEach(function(b){b.addEventListener('click',function(){
+  var el=document.getElementById(b.getAttribute('data-copy')),txt=el.textContent,old=b.textContent;
+  function sel(){var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent='selected, press copy'}
+  try{navigator.clipboard.writeText(txt).then(function(){b.textContent='copied'},sel)}catch(e){sel()}
+  setTimeout(function(){b.textContent=old},1800);
+})});
+
+/* ---------- CTF ---------- */
+var FLAG='flag{nexora_insider_0924}',hintN=0;
+var hints=[
+  'Hint 1: the value is encoded, not encrypted. It ends with = signs, which is a common base64 giveaway.',
+  'Hint 2: after decoding, the text still looks scrambled. The braces and underscores stayed, only the letters moved. Think of a 13-letter rotation.',
+  'Hint 3: in the shell below, run decode <string>, then rot13 <result>. Submit the final text.'
+];
+function solved(){
+  $('#ctfWin').classList.add('solved');
+  var m=$('#fmsg');m.className='fmsg good';m.textContent='FLAG CAPTURED. Nice work, you read the logs like an analyst.';
+  boost=2.2;store('ak_flag','1');
+}
+$('#fform').addEventListener('submit',function(e){
+  e.preventDefault();
+  var v=$('#flagIn').value.trim().toLowerCase(),m=$('#fmsg');
+  if(v===FLAG)return solved();
+  m.className='fmsg bad';m.textContent=v?'Access denied. That is not the flag.':'Enter a flag first.';
+  var w=$('#ctfWin');w.classList.remove('shake');void w.offsetWidth;w.classList.add('shake');
+});
+$('#hintBtn').addEventListener('click',function(){
+  var m=$('#fmsg');m.className='fmsg';m.textContent=hints[Math.min(hintN,hints.length-1)];hintN++;
+});
+if(store('ak_flag')==='1'){setTimeout(function(){$('#ctfWin').classList.add('solved');$('#fmsg').className='fmsg good';$('#fmsg').textContent='Already captured on this device. Nice.'},0)}
+
+/* ---------- shell ---------- */
+var tout=$('#tout'),cmdIn=$('#cmd'),hist=[],hp=0;
+function ln(html){var d=document.createElement('div');d.className='ln';d.innerHTML=html;tout.appendChild(d);tout.scrollTop=tout.scrollHeight}
+function kv(k,v){return '<span class="k">'+k+'</span>  '+v}
+function rot13(s){return s.replace(/[a-z]/gi,function(c){var b=c<='Z'?65:97;return String.fromCharCode((c.charCodeAt(0)-b+13)%26+b)})}
+var FILES={
+  'about.txt':function(){return ['Athul Krishna, a.k.a. mrz3r0.','Cyber security researcher: VAPT, bug bounty, DFIR and security education.','I report valid vulnerabilities through responsible disclosure and host awareness sessions.']},
+  'skills.txt':function(){return [kv('tools','Burp Suite, Nmap, Wireshark, SQLmap, Metasploit'),kv('platforms','Kali, Parrot OS, BlackArch, Windows'),kv('methods','OWASP Top 10, MITRE ATT&amp;CK')]},
+  'experience.log':function(){return [kv('2023-now','Freelance VAPT Analyst &amp; Bug Bounty Hunter'),kv('now','Cybersecurity Trainer, Offenso Hackers Academy'),kv('2024-2026','R&amp;D Head and Pentester, Cybernix'),kv('2025-2026','Cybersecurity Intern, Ugenix healthcare project')]},
+  'projects.txt':function(){return [kv('trazada-story','5-room insider threat CTF event (completed), includes the Red Rose Cyberforensics Workshop'),kv('darkwatchdog','RAG-based analysis tool for data leaks (demo in the projects section)'),kv('wi-spy','wireless reconnaissance tool (contributor)'),kv('wi-spy-2.0','automated pentesting tool on Raspberry Pi, upgrade of Wi-Spy')]},
+  'achievements.txt':function(){return [kv('2nd','Alibi CTF 2025'),kv('2nd','Chaithanya CTF'),kv('2nd','Tharang 2k26 Hackathon'),kv('hosted','IEEE and IEDC cybersecurity awareness sessions'),kv('disclosed','valid vulnerabilities via responsible disclosure')]},
+  'certs.txt':function(){return [kv('earned','CRTA, Certified Red Team Analyst (CWL labs)'),kv('studying','CompTIA Security+')]},
+  'contact.txt':function(){return [kv('email','jathul922004@gmail.com'),kv('linkedin','linkedin.com/in/0924at')]}
+};
+var CMDS={
+  help:function(){return [
+    '<span class="d">Navigate</span>','  '+kv('about','who I am')+'   '+kv('skills','toolkit'),'  '+kv('experience','work history')+'   '+kv('projects','what I build'),
+    '  '+kv('wins','achievements')+'   '+kv('certs','certifications')+'   '+kv('contact','reach me'),
+    '<span class="d">Utilities</span>','  '+kv('ls','list files')+'   '+kv('cat &lt;file&gt;','read a file')+'   '+kv('neofetch','system info'),
+    '  '+kv('decode &lt;b64&gt;','base64 decode')+'   '+kv('rot13 &lt;text&gt;','letter rotation'),
+    '  '+kv('matrix','toggle binary')+'   '+kv('reboot','replay boot')+'   '+kv('clear','clear screen'),
+    '<span class="d">Hint: the CTF section above needs decode and rot13.</span>']},
+  about:function(){return FILES['about.txt']()},
+  skills:function(){return FILES['skills.txt']()},
+  experience:function(){return FILES['experience.log']()},
+  projects:function(){return FILES['projects.txt']()},
+  wins:function(){return FILES['achievements.txt']()},
+  certs:function(){return FILES['certs.txt']()},
+  contact:function(){return FILES['contact.txt']()},
+  whoami:function(){return ['visitor (you), connected to mrz3r0\'s portfolio']},
+  neofetch:function(){return [kv('user','mrz3r0@athul-os'),kv('role','Cyber Security Researcher'),kv('focus','VAPT, bug bounty, DFIR'),kv('cert','CRTA'),kv('os','Kali, Parrot, BlackArch')]},
+  ls:function(){return ['<span class="c">about.txt  skills.txt  experience.log  projects.txt  achievements.txt  certs.txt  contact.txt</span>','<span class="d">flag.txt (permission denied)</span>']},
+  date:function(){return [new Date().toString()]},
+  matrix:function(){setRain(!rainOn);return ['binary '+(rainOn?'on':'off')]},
+  reboot:function(){setTimeout(runBoot,300);return ['<span class="a">Rebooting ...</span>']},
+  clear:function(){tout.innerHTML='';return []},
+  flag:function(){return ['Solve challenge-01 above, then submit the flag there.']},
+  sudo:function(){return ['<span class="r">visitor is not in the sudoers file. This incident will be reported.</span>']},
+  exit:function(){return ['Nice try. There is nowhere to go, this is a website.']}
+};
+var ALIAS={achievements:'wins',exp:'experience',project:'projects',cert:'certs',certifications:'certs',cls:'clear',more:'help','?':'help'};
+function run(raw){
+  var line=raw.trim();if(!line)return;
+  ln('<span class="k">visitor@athul-os:~$</span> '+esc(line));
+  hist.push(line);hp=hist.length;
+  var parts=line.split(/\s+/),name=parts[0].toLowerCase(),arg=line.slice(parts[0].length).trim();
+  name=ALIAS[name]||name;
+  var res;
+  if(name==='cat'){
+    if(!arg)res=['usage: cat &lt;file&gt;'];
+    else if(FILES[arg])res=FILES[arg]();
+    else if(arg==='flag.txt')res=['<span class="r">cat: flag.txt: Permission denied</span> (solve the challenge)'];
+    else if(arg==='.secret')res=['<span class="a">mrz3r0 was here.</span> Try rot13 on a famous word: uryyb'];
+    else res=['cat: '+esc(arg)+': No such file'];
+  }else if(name==='echo'){res=[esc(arg)]}
+  else if(name==='decode'){
+    if(!arg)res=['usage: decode &lt;base64&gt;'];
+    else{try{res=['<span class="a">'+esc(atob(arg))+'</span>']}catch(e){res=['<span class="r">decode: input is not valid base64</span>']}}
+  }else if(name==='rot13'){res=arg?['<span class="a">'+esc(rot13(arg))+'</span>']:['usage: rot13 &lt;text&gt;']}
+  else if(name==='rm'&&/-rf/.test(arg)){res=['<span class="r">Permission denied. Also, why?</span>']}
+  else if(CMDS[name]){res=CMDS[name]()}
+  else res=['bash: '+esc(parts[0])+': command not found. Type <span class="k">help</span>.'];
+  res.forEach(function(r){ln(r)});
+}
+$('#tform').addEventListener('submit',function(e){e.preventDefault();var v=cmdIn.value;cmdIn.value='';run(v)});
+cmdIn.addEventListener('keydown',function(e){
+  if(e.key==='ArrowUp'){e.preventDefault();if(hp>0){hp--;cmdIn.value=hist[hp]||''}}
+  else if(e.key==='ArrowDown'){e.preventDefault();if(hp<hist.length-1){hp++;cmdIn.value=hist[hp]}else{hp=hist.length;cmdIn.value=''}}
+  else if(e.key==='Tab'){
+    e.preventDefault();var v=cmdIn.value.toLowerCase();if(!v)return;
+    var names=Object.keys(CMDS).concat(['cat','echo','decode','rot13']).filter(function(n){return n.indexOf(v)===0});
+    if(names.length===1)cmdIn.value=names[0]+(/^(cat|echo|decode|rot13)$/.test(names[0])?' ':'');
+  }
+});
+$('#chips').addEventListener('click',function(e){var b=e.target.closest('button');if(b)run(b.getAttribute('data-c'))});
+$('#rebootBtn').addEventListener('click',runBoot);
+ln('<span class="d">ATHUL-OS shell. Type</span> <span class="k">help</span> <span class="d">to list commands.</span>');
+
+/* ---------- extra interactivity ---------- */
+var tt,toastEl=document.createElement('div');
+toastEl.id='toast';toastEl.setAttribute('role','status');document.body.appendChild(toastEl);
+function toast(m){toastEl.textContent=m;toastEl.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){toastEl.classList.remove('show')},2200)}
+function runInShell(c){go('shell');setTimeout(function(){run(c)},reduced?0:650)}
+function press(el,fn){
+  el.setAttribute('tabindex','0');el.setAttribute('role','button');el.classList.add('tk');
+  el.addEventListener('click',function(e){fn(e)});
+  el.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target===el){e.preventDefault();fn(e)}});
+}
+/* projects: expand to inspect */
+var DET={
+  'Trazada Story':'type      CTF event (insider threat)\nrooms     5\nsetting   fictional breach at Nexora Technologies\nincludes  Red Rose Cyberforensics Workshop (DFIR)\nevidence  mobile, wearable and workstation devices (fabricated)\nstatus    completed\nrole      creator and organizer',
+  'Wi-Spy':'type  wireless reconnaissance tool\nrole  contributor',
+  'Wi-Spy 2.0':'type      automated pentesting tool\nplatform  Raspberry Pi\nlineage   upgrade of the wireless Wi-Spy tool'
+};
+$$('#projects .card').forEach(function(c){
+  var title=$('h3',c).textContent,txt=DET[title];if(!txt)return;
+  var wrap=document.createElement('div');wrap.className='pdet';
+  wrap.innerHTML='<div><pre>'+esc(txt)+'</pre><p style="margin:10px 0 0"><button class="mini" type="button">run in shell</button></p></div>';
+  c.appendChild(wrap);
+  var h=document.createElement('p');h.className='hint';h.textContent='▸ click to inspect';c.appendChild(h);
+  $('button',wrap).addEventListener('click',function(e){e.stopPropagation();runInShell('projects')});
+  c.setAttribute('aria-expanded','false');
+  press(c,function(){var o=c.classList.toggle('open');c.setAttribute('aria-expanded',String(o));h.textContent=o?'▾ click to close':'▸ click to inspect'});
+});
+/* wins */
+var EV={'Alibi CTF 2025':'Alibi CTF 2025: 2nd place','Chaithanya CTF':'Chaithanya CTF: 2nd place','Tharang 2k26 Hackathon':'Tharang 2k26 Hackathon: 2nd place'};
+$$('#wins .card').forEach(function(c){
+  var h=$('h3',c).textContent;
+  press(c,function(){
+    c.classList.remove('pulse');void c.offsetWidth;c.classList.add('pulse');
+    if(EV[h]){toast(EV[h]);boost=Math.max(boost,1.2)}else runInShell('wins');
+  });
+});
+$$('#wins .win .wb p:not(.cmd)').forEach(function(p){press(p,function(){runInShell('certs')})});
+/* counters */
+$$('.ct').forEach(function(c){press(c,function(){var s=$('strong',c);countUp(s);toast(s.getAttribute('data-count')+' '+$('span',c).textContent)})});
+/* neofetch rows run in the shell */
+var NFMAP={name:'about',role:'about',focus:'skills',edu:'about',os:'skills',cert:'certs',langs:'about',where:'contact'};
+$$('.nf dt:not(.u)').forEach(function(dt){
+  var k=dt.textContent.trim(),dd=dt.nextElementSibling;if(!NFMAP[k]||!dd)return;
+  [dt,dd].forEach(function(el){
+    press(el,function(){runInShell(NFMAP[k])});
+    el.addEventListener('mouseenter',function(){dt.classList.add('hl');dd.classList.add('hl')});
+    el.addEventListener('mouseleave',function(){dt.classList.remove('hl');dd.classList.remove('hl')});
+  });
+});
+var nfh=document.createElement('p');nfh.className='nfhint';nfh.textContent='Click any row to run it in the shell.';$('.nf').parentNode.appendChild(nfh);
+/* prompt lines replay */
+$$('.cmd[data-type]').forEach(function(c){
+  c.setAttribute('title','Click to replay');
+  c.addEventListener('click',function(){
+    if(c._busy)return;c._busy=true;$('.t',c).textContent='';typeCmd(c);
+    setTimeout(function(){c._busy=false},c.getAttribute('data-type').length*32+200);
+  });
+});
+/* name scramble */
+var nmEl=$('#nm');
+nmEl.setAttribute('title','Click to decrypt');
+nmEl.addEventListener('click',function(){
+  if(reduced||nmEl._s)return;nmEl._s=true;
+  var orig=nmEl.getAttribute('data-t'),n=0,ch='01#$%&@!<>/';
+  var iv=setInterval(function(){
+    n++;var o='';
+    for(var i=0;i<orig.length;i++)o+=(orig.charAt(i)===' '||i<n/2)?orig.charAt(i):ch.charAt(Math.floor(Math.random()*ch.length));
+    nmEl.textContent=o;
+    if(n>=orig.length*2){clearInterval(iv);nmEl.textContent=orig;nmEl._s=false}
+  },35);
+});
+/* skills rescan */
+press($('#scandone'),function(){
+  $$('#items .item').forEach(function(i){i.classList.remove('on')});
+  setTimeout(function(){runScan($('#scan'))},120);
+});
+/* experience expand all */
+var eb=document.createElement('button');eb.className='mini';eb.type='button';eb.textContent='expand all';
+eb.style.cssText='display:block;margin:-10px 0 14px';
+$('#experience .lead').insertAdjacentElement('afterend',eb);
+eb.addEventListener('click',function(){
+  var open=eb.textContent==='expand all';
+  $$('.commit').forEach(function(c){c.classList.toggle('open',open);$('.chead',c).setAttribute('aria-expanded',String(open))});
+  eb.textContent=open?'collapse all':'expand all';
+});
+/* contact */
+press($('#mail'),function(){$('[data-copy="mail"]').click();toast('Email copied')});
+/* DarkWatchDog demo: sample data, simulated retrieval */
+var DWD=[
+  {id:'paste-0412',t:'14,230 rows posted: email, bcrypt password hash and signup date from shop.acme-retail.test. The poster says it came from a forgotten staging database.',a:'14,230 customer rows were posted: email, password hash and signup date.',k:'what data exposed leaked emails email rows customers records posted dump'},
+  {id:'paste-0412',t:'Sampled hashes are bcrypt, cost 10. Three of 20 sampled hashes fell to a common wordlist.',a:'Passwords were hashed with bcrypt, but weak ones can still be cracked: 3 of 20 sampled fell to a common wordlist.',k:'password passwords hash hashed protected bcrypt crack cracked weak secure'},
+  {id:'forum-1187',t:'Seller lists admin panel access for 0.05 BTC. Listing dated 2026-10-02.',a:'Yes. Admin panel access is listed for sale at 0.05 BTC, posted 2026-10-02.',k:'sale sell selling sold price admin access panel btc buy listing'},
+  {id:'forum-1187',t:'The listing names the same staging host as paste-0412.',a:'The sale listing points to the same staging host, which suggests a single source.',k:'source origin host staging same linked related where come came from'},
+  {id:'channel-77',t:'A second archive is mentioned with phone numbers and partial addresses. Not verified.',a:'A second archive with phone numbers and partial addresses is mentioned, but it is unverified.',k:'phone numbers addresses second archive more other unverified'},
+  {id:'paste-0412',t:'No payment card data appears in the sample.',a:'No payment card data appears in the sample.',k:'payment card cards credit financial bank'}
+];
+var dwdTok=0,dwdStop=['the','was','were','are','any','for','and','there','this','that','with','did','does','from'];
+function dwdRun(q,instant){
+  q=q.trim();if(!q)return;
+  var out=$('#dwdOut'),tok=++dwdTok;
+  var qt=(q.toLowerCase().match(/[a-z0-9]+/g)||[]).filter(function(w){return w.length>2&&dwdStop.indexOf(w)<0});
+  var hits=DWD.map(function(c){
+    var set=(c.k+' '+c.t.toLowerCase()).match(/[a-z0-9]+/g),h=0;
+    qt.forEach(function(w){if(set.indexOf(w)>-1)h++});
+    return {c:c,h:h};
+  }).filter(function(x){return x.h>0}).sort(function(a,b){return b.h-a.h}).slice(0,3);
+  var L=[];
+  L.push('<div><span class="k">[1]</span> embedding query: <span class="d">'+esc(q)+'</span></div>');
+  L.push('<div><span class="k">[2]</span> searching '+DWD.length+' indexed chunks ... '+hits.length+' relevant</div>');
+  hits.forEach(function(x){
+    var s=Math.min(.99,.42+.19*x.h).toFixed(2);
+    L.push('<div class="hit"><b>'+x.c.id+'</b> <span class="c">score '+s+'</span><br>'+esc(x.c.t)+'</div>');
+  });
+  L.push('<div><span class="k">[3]</span> answer</div>');
+  if(hits.length)L.push('<div class="ans">'+hits.slice(0,2).map(function(x){return esc(x.c.a)}).join(' ')+'</div>');
+  else L.push('<div class="ans">No match in the sample set. Try asking what was exposed, whether anything is for sale, or about passwords.</div>');
+  L.push('<div class="d">Sample data only. Every record above is made up for this demo.</div>');
+  out.innerHTML='';
+  L.forEach(function(h,i){
+    function add(){if(tok!==dwdTok)return;out.insertAdjacentHTML('beforeend',h)}
+    if(instant||reduced)add();else setTimeout(add,i*320);
+  });
+}
+$('#dwdForm').addEventListener('submit',function(e){e.preventDefault();dwdRun($('#dwdIn').value)});
+$('#dwdChips').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  var q=b.getAttribute('data-q');$('#dwdIn').value=q;dwdRun(q);
+});
+/* leak check mode */
+var LEAKS=[
+  {id:'paste-0412',dom:'acme-retail.test',date:'2026-09',fields:'email, bcrypt hash, signup date',sev:'medium',emails:['demo@acme-retail.test','admin@acme-retail.test'],adv:'Change the password if it was reused elsewhere, and watch for phishing that mentions the shop.'},
+  {id:'combo-list-09',dom:'harbor-mail.test',date:'2026-07',fields:'email, plaintext password',sev:'high',emails:['sample@harbor-mail.test'],adv:'Change that password everywhere it was used and turn on multi-factor authentication.'}
+];
+function chkRun(raw,instant){
+  var v=raw.trim().toLowerCase();if(!v)return;
+  var tok=++dwdTok,out=$('#dwdOut'),isMail=v.indexOf('@')>0;
+  var dom=isMail?v.split('@').pop():v.replace(/^https?:\/\//,'').replace(/\/.*$/,'');
+  var hits=LEAKS.filter(function(l){return l.dom===dom});
+  var L=[];
+  L.push('<div><span class="k">[1]</span> normalising input: <span class="d">'+(isMail?'email ':'domain ')+esc(v)+'</span></div>');
+  L.push('<div><span class="k">[2]</span> checking '+LEAKS.length+' sample leak sources ... '+hits.length+' match'+(hits.length===1?'':'es')+'</div>');
+  var found=false;
+  hits.forEach(function(l){
+    var inRows=isMail&&l.emails.indexOf(v)>-1;if(inRows)found=true;
+    var sev='<span class="'+(l.sev==='high'?'r':'a')+'">'+l.sev+' severity</span>';
+    L.push('<div class="hit"><b>'+l.id+'</b> <span class="c">'+l.date+'</span> &middot; '+sev+'<br>Exposed fields: '+l.fields+'<br>'+
+      (isMail?(inRows?'This address: <span class="r">found in the sampled rows</span>':'This address: not in the sampled rows, but its domain is affected'):'Accounts on this domain may be affected')+'</div>');
+  });
+  L.push('<div><span class="k">[3]</span> verdict</div>');
+  if(found)L.push('<div class="ans bad"><b>Exposed.</b> This address appears in '+hits.length+' leak source. '+hits[0].adv+'</div>');
+  else if(hits.length)L.push('<div class="ans bad"><b>Domain affected.</b> '+(isMail?'This address was not in the sampled rows, but other accounts on the domain were. ':'')+hits[0].adv+'</div>');
+  else L.push('<div class="ans"><b>No matches</b> in the sample index.</div>');
+  L.push('<div class="d">Sample index only. These records are made up, and nothing you type leaves this page.</div>');
+  out.innerHTML='';
+  L.forEach(function(h,i){
+    function add(){if(tok!==dwdTok)return;out.insertAdjacentHTML('beforeend',h)}
+    if(instant||reduced)add();else setTimeout(add,i*320);
+  });
+}
+$('#chkForm').addEventListener('submit',function(e){e.preventDefault();chkRun($('#chkIn').value)});
+$('#chkChips').addEventListener('click',function(e){
+  var b=e.target.closest('button');if(!b)return;
+  var q=b.getAttribute('data-q');$('#chkIn').value=q;chkRun(q);
+});
+function dwdMode(m){
+  var chk=m==='chk';
+  $('#tabChk').setAttribute('aria-selected',String(chk));$('#tabAsk').setAttribute('aria-selected',String(!chk));
+  $('#paneChk').hidden=!chk;$('#paneAsk').hidden=chk;
+  if(chk){$('#chkIn').value='demo@acme-retail.test';chkRun('demo@acme-retail.test',true)}
+  else{$('#dwdIn').value='';dwdRun('What data was exposed?',true)}
+}
+$$('.dwdtabs button').forEach(function(b){b.addEventListener('click',function(){dwdMode(b.getAttribute('data-m'))})});
+dwdMode('chk');
+/* back to top and keyboard shortcut */
+var topBtn=document.createElement('button');
+topBtn.id='topBtn';topBtn.type='button';topBtn.textContent='↑ top';topBtn.hidden=true;document.body.appendChild(topBtn);
+topBtn.addEventListener('click',function(){go('home')});
+window.addEventListener('scroll',function(){topBtn.hidden=window.scrollY<700},{passive:true});
+document.addEventListener('keydown',function(e){
+  if(booting)return;
+  var tg=e.target&&e.target.tagName;if(tg==='INPUT'||tg==='TEXTAREA')return;
+  if(e.key==='/'){e.preventDefault();go('shell');setTimeout(function(){cmdIn.focus()},500)}
+});
+
+runBoot();
+})();
+</script>
+
+</body>
+</html>
