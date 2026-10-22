@@ -244,6 +244,8 @@ footer{padding-block:36px 56px;color:var(--dim);font-size:12px}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #topBtn{position:fixed;right:max(16px,env(safe-area-inset-right,0px));bottom:calc(18px + env(safe-area-inset-bottom,0px));z-index:45;background:var(--panel-solid);border:1px solid var(--accent);color:var(--accent);padding:7px 12px;border-radius:6px;cursor:pointer}
 #topBtn:hover{background:var(--accent);color:#04120a}
+.podium{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.pimg{display:block;width:100%;max-height:240px;object-fit:cover;border-radius:6px;margin:0 0 14px;border:1px solid var(--line)}
 @media(prefers-reduced-motion:reduce){
   .pulse{animation:none}
   html{scroll-behavior:auto}
@@ -298,6 +300,7 @@ footer{padding-block:36px 56px;color:var(--dim);font-size:12px}
         <a class="btn" href="#experience" data-go="experience">View experience</a>
         <a class="btn alt" href="#ctf" data-go="ctf">Capture the flag</a>
         <a class="btn alt" href="#shell" data-go="shell">Open the shell</a>
+        <a class="btn alt" id="resumeBtn" href="#" target="_blank" rel="noopener" hidden>Résumé</a>
       </div>
 
       <div class="win rv" style="--d:5">
@@ -320,10 +323,10 @@ footer{padding-block:36px 56px;color:var(--dim);font-size:12px}
       </div>
 
       <div class="counters">
-        <div class="ct rv" style="--d:1"><strong data-count="3">0</strong><span>podium finishes</span></div>
-        <div class="ct rv" style="--d:2"><strong data-count="4">0</strong><span>roles held</span></div>
+        <div class="ct rv" style="--d:1"><strong id="cPod" data-count="3">0</strong><span>podium finishes</span></div>
+        <div class="ct rv" style="--d:2"><strong id="cRoles" data-count="4">0</strong><span>roles held</span></div>
         <div class="ct rv" style="--d:3"><strong data-count="3">0</strong><span>years in security</span></div>
-        <div class="ct rv" style="--d:4"><strong data-count="1">0</strong><span>red team cert earned</span></div>
+        <div class="ct rv" style="--d:4"><strong id="cCert" data-count="1">0</strong><span>certs earned</span></div>
       </div>
     </div>
   </section>
@@ -367,53 +370,8 @@ footer{padding-block:36px 56px;color:var(--dim);font-size:12px}
     <div class="box">
       <p class="cmd rv" data-type="git log --oneline --career"><span class="ps">$</span> <span class="t"></span></p>
       <h2 class="h rv">Work history</h2>
-      <p class="lead rv" style="--d:1">Four roles across pentesting, research, training and secure development. Click a commit to open it.</p>
-      <div class="log">
-        <article class="commit rv open" style="--d:1">
-          <button class="chead" type="button" aria-expanded="true"><span class="hash">e41c9a7</span><span class="ctitle">Freelance VAPT Analyst &amp; Bug Bounty Hunter</span><span class="when">2023 to present</span></button>
-          <div class="cbody"><div><div class="cin">
-            <ul>
-              <li>Reported valid vulnerabilities focused on web application flaws such as XSS, IDOR and improper access control.</li>
-              <li>Documented each finding with a clear proof of concept and recommended mitigations, following responsible disclosure practices.</li>
-            </ul>
-          </div></div></div>
-        </article>
-        <article class="commit rv" style="--d:2">
-          <button class="chead" type="button" aria-expanded="false"><span class="hash">b2d07f3</span><span class="ctitle">Cybersecurity Trainer</span><span class="when">present</span></button>
-          <div class="cbody"><div><div class="cin">
-            <p class="org">Offenso Hackers Academy</p>
-            <ul>
-              <li>Deliver hands-on training in ethical hacking, VAPT and web application security.</li>
-              <li>Run workshops, CTF sessions and practical labs, and mentor students in penetration testing methodology and security best practices.</li>
-              <li>Develop training materials and real-world cybersecurity challenges.</li>
-            </ul>
-          </div></div></div>
-        </article>
-        <article class="commit rv" style="--d:3">
-          <button class="chead" type="button" aria-expanded="false"><span class="hash">7a95e10</span><span class="ctitle">R&amp;D Head and Pentester</span><span class="when">2024 to 2026</span></button>
-          <div class="cbody"><div><div class="cin">
-            <p class="org">Cybernix</p>
-            <ul>
-              <li>Led cybersecurity R&amp;D and built security tools and proofs of concept.</li>
-              <li>Performed VAPT on web applications, APIs and networks.</li>
-              <li>Researched emerging threats, validated vulnerabilities and delivered technical reports with remediation recommendations.</li>
-              <li>Developed CTF challenges and mentored interns in offensive security.</li>
-            </ul>
-          </div></div></div>
-        </article>
-        <article class="commit rv" style="--d:4">
-          <button class="chead" type="button" aria-expanded="false"><span class="hash">19fc3d8</span><span class="ctitle">Cybersecurity Intern</span><span class="when">2025 to 2026</span></button>
-          <div class="cbody"><div><div class="cin">
-            <p class="org">Ugenix, healthcare app development project</p>
-            <ul>
-              <li>Worked with the development team to build security into the healthcare app from the ground up.</li>
-              <li>Reviewed how data is stored, accessed and protected to keep patient information safe and compliant.</li>
-              <li>Helped design and test authentication, authorization and other core security features.</li>
-              <li>Contributed to threat modeling sessions and shared ideas to strengthen the app's defenses.</li>
-            </ul>
-          </div></div></div>
-        </article>
-      </div>
+      <p class="lead rv" style="--d:1">Roles across pentesting, research, training and secure development. Click a commit to open it.</p>
+      <div class="log" id="logBox"></div>
     </div>
   </section>
 
@@ -423,67 +381,7 @@ footer{padding-block:36px 56px;color:var(--dim);font-size:12px}
       <p class="cmd rv" data-type="ls -la ~/projects"><span class="ps">$</span> <span class="t"></span></p>
       <h2 class="h rv">Things I've built</h2>
       <p class="lead rv" style="--d:1">CTFs, forensic training and tooling.</p>
-      <div class="grid">
-        <article class="card rv" style="--d:1;grid-column:1/-1">
-          <h3>Trazada Story</h3>
-          <p class="st-line">completed, created and run by me</p>
-          <p>A five-room insider threat CTF event built around a fictional breach at Nexora Technologies. It included the Red Rose Cyberforensics Workshop, a DFIR training scenario with detailed fabricated evidence across mobile, wearable and workstation devices.</p>
-          <div class="tags"><span>CTF</span><span>insider threat</span><span>5 rooms</span><span>DFIR</span></div>
-        </article>
-        <article class="card rv" id="dwd" style="--d:2;grid-column:1/-1">
-          <h3>DarkWatchDog</h3>
-          <p class="st-line">demo</p>
-          <p>A RAG-based analysis tool that checks leaked data. It looks up an email or domain against leak sources and answers questions about what was exposed. The demo below runs on made-up sample data, and nothing you type leaves this page.</p>
-          <div class="tags"><span>RAG</span><span>data leaks</span><span>threat intel</span><span>demo</span></div>
-          <div class="dwd">
-            <p class="dwdlab">darkwatchdog / demo &middot; sample data, simulated retrieval</p>
-            <div class="dwdtabs" role="tablist" aria-label="Demo mode">
-              <button type="button" role="tab" id="tabChk" data-m="chk" aria-selected="false">Check an email or domain</button>
-              <button type="button" role="tab" id="tabAsk" data-m="ask" aria-selected="true">Ask the leak</button>
-            </div>
-            <div id="paneAsk">
-            <div class="chips" id="dwdChips">
-              <button type="button" data-q="What data was exposed?">What data was exposed?</button>
-              <button type="button" data-q="Is anything for sale?">Is anything for sale?</button>
-              <button type="button" data-q="Were the passwords protected?">Were the passwords protected?</button>
-              <button type="button" data-q="Any payment card data?">Any payment card data?</button>
-              <button type="button" data-q="Where did it come from?">Where did it come from?</button>
-            </div>
-            <form class="fform" id="dwdForm" autocomplete="off" style="margin-top:0">
-              <label class="sr" for="dwdIn">Ask about the sample leak</label>
-              <input id="dwdIn" type="text" placeholder="Ask about the sample leak" spellcheck="false">
-              <button class="btn" type="submit">Ask</button>
-            </form>
-            </div>
-            <div id="paneChk" hidden>
-              <div class="chips" id="chkChips">
-                <button type="button" data-q="demo@acme-retail.test">demo@acme-retail.test</button>
-                <button type="button" data-q="sample@harbor-mail.test">sample@harbor-mail.test</button>
-                <button type="button" data-q="acme-retail.test">acme-retail.test</button>
-                <button type="button" data-q="someone@example.org">someone@example.org</button>
-              </div>
-              <form class="fform" id="chkForm" autocomplete="off" style="margin-top:0">
-                <label class="sr" for="chkIn">Email or domain to check</label>
-                <input id="chkIn" type="text" placeholder="Enter an email or domain" spellcheck="false" autocapitalize="off">
-                <button class="btn" type="submit">Check</button>
-              </form>
-            </div>
-            <div class="dwdout" id="dwdOut" aria-live="polite"></div>
-          </div>
-        </article>
-        <article class="card rv" style="--d:3">
-          <h3>Wi-Spy</h3>
-          <p class="st-line">contributor</p>
-          <p>A wireless reconnaissance tool I contribute to.</p>
-          <div class="tags"><span>wireless</span><span>recon</span><span>tooling</span></div>
-        </article>
-        <article class="card rv" style="--d:4">
-          <h3>Wi-Spy 2.0</h3>
-          <p class="st-line">automated pentesting tool</p>
-          <p>The upgrade of the wireless Wi-Spy tool. Version 2.0 automates the pentesting workflow and is built on a Raspberry Pi.</p>
-          <div class="tags"><span>automation</span><span>pentesting</span><span>Raspberry Pi</span><span>wireless</span></div>
-        </article>
-      </div>
+      <div class="grid" id="projGrid"></div>
     </div>
   </section>
 
@@ -493,20 +391,10 @@ footer{padding-block:36px 56px;color:var(--dim);font-size:12px}
       <p class="cmd rv" data-type="cat achievements.txt"><span class="ps">$</span> <span class="t"></span></p>
       <h2 class="h rv">Wins and community</h2>
       <p class="lead rv" style="--d:1">Competitions, disclosures and sessions I've hosted.</p>
-      <div class="grid" style="grid-template-columns:repeat(3,minmax(0,1fr))" id="podium">
-        <article class="card rv" style="--d:1"><p class="rank">2<small>nd</small></p><h3>Alibi CTF 2025</h3><div class="tags"><span>CTF</span></div></article>
-        <article class="card rv" style="--d:2"><p class="rank">2<small>nd</small></p><h3>Chaithanya CTF</h3><div class="tags"><span>CTF</span></div></article>
-        <article class="card rv" style="--d:3"><p class="rank">2<small>nd</small></p><h3>Tharang 2k26 Hackathon</h3><div class="tags"><span>hackathon</span></div></article>
-      </div>
-      <div class="grid" style="margin-top:14px">
-        <article class="card rv" style="--d:1"><h3>Valid disclosures</h3><p style="margin:0">Valid vulnerabilities reported through responsible disclosure.</p></article>
-        <article class="card rv" style="--d:2"><h3>Awareness sessions</h3><p style="margin:0">Hosted cybersecurity awareness sessions for IEEE and IEDC.</p></article>
-      </div>
+      <div class="podium" id="podium"></div>
+      <div class="grid" id="winsOther" style="margin-top:14px"></div>
       <div class="win rv" style="margin-top:14px;--d:1">
-        <div class="wb"><p class="cmd" style="margin:0 0 6px"><span class="ps">$</span> cat certs.txt</p>
-          <p style="margin:0"><span style="color:var(--accent)">[earned]</span> CRTA, Certified Red Team Analyst, CWL labs</p>
-          <p style="margin:0"><span style="color:var(--amber)">[studying]</span> CompTIA Security+</p>
-        </div>
+        <div class="wb" id="certBox"><p class="cmd" style="margin:0 0 6px"><span class="ps">$</span> cat certs.txt</p></div>
       </div>
     </div>
   </section>
@@ -685,7 +573,7 @@ async function runBoot(){
 function finish(){
   booting=false;boot.classList.add('off');document.body.classList.remove('booting');
   setTimeout(function(){if(!booting)boot.hidden=true},750);
-  startSite();
+  ready.then(startSite);
 }
 function doSkip(){if(!booting||skipped)return;skipped=true;if(abort)abort()}
 $('#skip').addEventListener('click',doSkip);
@@ -779,15 +667,6 @@ $('#items').addEventListener('click',function(e){
   var it=b.parentNode,open=!it.classList.contains('open');
   it.classList.toggle('open',open);b.setAttribute('aria-expanded',String(open));
 });
-/* ---------- experience accordion ---------- */
-$$('.chead').forEach(function(b){b.addEventListener('click',function(){
-  var c=b.parentNode,open=!c.classList.contains('open');
-  c.classList.toggle('open',open);b.setAttribute('aria-expanded',String(open));
-})});
-/* ---------- card glow ---------- */
-$$('.card').forEach(function(c){c.addEventListener('pointermove',function(e){
-  var r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px');
-})});
 /* ---------- copy ---------- */
 $$('[data-copy]').forEach(function(b){b.addEventListener('click',function(){
   var el=document.getElementById(b.getAttribute('data-copy')),txt=el.textContent,old=b.textContent;
@@ -828,16 +707,16 @@ function rot13(s){return s.replace(/[a-z]/gi,function(c){var b=c<='Z'?65:97;retu
 var FILES={
   'about.txt':function(){return ['Athul Krishna, a.k.a. mrz3r0.','Cyber security researcher: VAPT, bug bounty, DFIR and security education.','I report valid vulnerabilities through responsible disclosure and host awareness sessions.']},
   'skills.txt':function(){return [kv('tools','Burp Suite, Nmap, Wireshark, SQLmap, Metasploit'),kv('platforms','Kali, Parrot OS, BlackArch, Windows'),kv('methods','OWASP Top 10, MITRE ATT&amp;CK')]},
-  'experience.log':function(){return [kv('2023-now','Freelance VAPT Analyst &amp; Bug Bounty Hunter'),kv('now','Cybersecurity Trainer, Offenso Hackers Academy'),kv('2024-2026','R&amp;D Head and Pentester, Cybernix'),kv('2025-2026','Cybersecurity Intern, Ugenix healthcare project')]},
-  'projects.txt':function(){return [kv('trazada-story','5-room insider threat CTF event (completed), includes the Red Rose Cyberforensics Workshop'),kv('darkwatchdog','RAG-based analysis tool for data leaks (demo in the projects section)'),kv('wi-spy','wireless reconnaissance tool (contributor)'),kv('wi-spy-2.0','automated pentesting tool on Raspberry Pi, upgrade of Wi-Spy')]},
-  'achievements.txt':function(){return [kv('2nd','Alibi CTF 2025'),kv('2nd','Chaithanya CTF'),kv('2nd','Tharang 2k26 Hackathon'),kv('hosted','IEEE and IEDC cybersecurity awareness sessions'),kv('disclosed','valid vulnerabilities via responsible disclosure')]},
-  'certs.txt':function(){return [kv('earned','CRTA, Certified Red Team Analyst (CWL labs)'),kv('studying','CompTIA Security+')]},
+  'experience.log':function(){return CONTENT.experience.map(function(x){return kv(esc(x.period||''),esc(x.role)+(x.org?', '+esc(x.org):''))})},
+  'projects.txt':function(){return CONTENT.projects.map(function(p){return kv(esc(slug(p.title)),esc(firstSentence(p.desc)))})},
+  'achievements.txt':function(){return CONTENT.wins.podium.map(function(w){return kv(esc(w.place||''),esc(w.title||''))}).concat(CONTENT.wins.other.map(function(o){return kv(esc(String(o.title||'').toLowerCase()),esc(o.text||''))}))},
+  'certs.txt':function(){return CONTENT.wins.certs.map(function(c){return kv(esc(c.status||''),esc(c.name||''))})},
   'contact.txt':function(){return [kv('email','jathul922004@gmail.com'),kv('linkedin','linkedin.com/in/0924at')]}
 };
 var CMDS={
   help:function(){return [
     '<span class="d">Navigate</span>','  '+kv('about','who I am')+'   '+kv('skills','toolkit'),'  '+kv('experience','work history')+'   '+kv('projects','what I build'),
-    '  '+kv('wins','achievements')+'   '+kv('certs','certifications')+'   '+kv('contact','reach me'),
+    '  '+kv('wins','achievements')+'   '+kv('certs','certifications')+'   '+kv('contact','reach me')+'   '+kv('resume','get my resume'),
     '<span class="d">Utilities</span>','  '+kv('ls','list files')+'   '+kv('cat &lt;file&gt;','read a file')+'   '+kv('neofetch','system info'),
     '  '+kv('decode &lt;b64&gt;','base64 decode')+'   '+kv('rot13 &lt;text&gt;','letter rotation'),
     '  '+kv('matrix','toggle binary')+'   '+kv('reboot','replay boot')+'   '+kv('clear','clear screen'),
@@ -849,6 +728,7 @@ var CMDS={
   wins:function(){return FILES['achievements.txt']()},
   certs:function(){return FILES['certs.txt']()},
   contact:function(){return FILES['contact.txt']()},
+  resume:function(){var r=CONTENT.resume;return (r&&r.enabled&&okFile(r.file))?['<a href="'+esc(r.file)+'" target="_blank" rel="noopener">'+esc(r.label||'Resume')+'</a> ('+esc(r.file)+')']:['No resume file is published yet.']},
   whoami:function(){return ['visitor (you), connected to mrz3r0\'s portfolio']},
   neofetch:function(){return [kv('user','mrz3r0@athul-os'),kv('role','Cyber Security Researcher'),kv('focus','VAPT, bug bounty, DFIR'),kv('cert','CRTA'),kv('os','Kali, Parrot, BlackArch')]},
   ls:function(){return ['<span class="c">about.txt  skills.txt  experience.log  projects.txt  achievements.txt  certs.txt  contact.txt</span>','<span class="d">flag.txt (permission denied)</span>']},
@@ -908,32 +788,6 @@ function press(el,fn){
   el.addEventListener('click',function(e){fn(e)});
   el.addEventListener('keydown',function(e){if((e.key==='Enter'||e.key===' ')&&e.target===el){e.preventDefault();fn(e)}});
 }
-/* projects: expand to inspect */
-var DET={
-  'Trazada Story':'type      CTF event (insider threat)\nrooms     5\nsetting   fictional breach at Nexora Technologies\nincludes  Red Rose Cyberforensics Workshop (DFIR)\nevidence  mobile, wearable and workstation devices (fabricated)\nstatus    completed\nrole      creator and organizer',
-  'Wi-Spy':'type  wireless reconnaissance tool\nrole  contributor',
-  'Wi-Spy 2.0':'type      automated pentesting tool\nplatform  Raspberry Pi\nlineage   upgrade of the wireless Wi-Spy tool'
-};
-$$('#projects .card').forEach(function(c){
-  var title=$('h3',c).textContent,txt=DET[title];if(!txt)return;
-  var wrap=document.createElement('div');wrap.className='pdet';
-  wrap.innerHTML='<div><pre>'+esc(txt)+'</pre><p style="margin:10px 0 0"><button class="mini" type="button">run in shell</button></p></div>';
-  c.appendChild(wrap);
-  var h=document.createElement('p');h.className='hint';h.textContent='▸ click to inspect';c.appendChild(h);
-  $('button',wrap).addEventListener('click',function(e){e.stopPropagation();runInShell('projects')});
-  c.setAttribute('aria-expanded','false');
-  press(c,function(){var o=c.classList.toggle('open');c.setAttribute('aria-expanded',String(o));h.textContent=o?'▾ click to close':'▸ click to inspect'});
-});
-/* wins */
-var EV={'Alibi CTF 2025':'Alibi CTF 2025: 2nd place','Chaithanya CTF':'Chaithanya CTF: 2nd place','Tharang 2k26 Hackathon':'Tharang 2k26 Hackathon: 2nd place'};
-$$('#wins .card').forEach(function(c){
-  var h=$('h3',c).textContent;
-  press(c,function(){
-    c.classList.remove('pulse');void c.offsetWidth;c.classList.add('pulse');
-    if(EV[h]){toast(EV[h]);boost=Math.max(boost,1.2)}else runInShell('wins');
-  });
-});
-$$('#wins .win .wb p:not(.cmd)').forEach(function(p){press(p,function(){runInShell('certs')})});
 /* counters */
 $$('.ct').forEach(function(c){press(c,function(){var s=$('strong',c);countUp(s);toast(s.getAttribute('data-count')+' '+$('span',c).textContent)})});
 /* neofetch rows run in the shell */
@@ -984,6 +838,7 @@ eb.addEventListener('click',function(){
 });
 /* contact */
 press($('#mail'),function(){$('[data-copy="mail"]').click();toast('Email copied')});
+function initDwd(){
 /* DarkWatchDog demo: sample data, simulated retrieval */
 var DWD=[
   {id:'paste-0412',t:'14,230 rows posted: email, bcrypt password hash and signup date from shop.acme-retail.test. The poster says it came from a forgotten staging database.',a:'14,230 customer rows were posted: email, password hash and signup date.',k:'what data exposed leaked emails email rows customers records posted dump'},
@@ -1070,6 +925,108 @@ function dwdMode(m){
 }
 $$('.dwdtabs button').forEach(function(b){b.addEventListener('click',function(){dwdMode(b.getAttribute('data-m'))})});
 dwdMode('chk');
+}
+/* ---------- content: content.json from the site, with a built-in copy as fallback ---------- */
+var DEFAULT_CONTENT={"version": 1, "resume": {"enabled": false, "file": "resume.pdf", "label": "Résumé"}, "projects": [{"title": "Trazada Story", "status": "completed, created and run by me", "desc": "A five-room insider threat CTF event built around a fictional breach at Nexora Technologies. It included the Red Rose Cyberforensics Workshop, a DFIR training scenario with detailed fabricated evidence across mobile, wearable and workstation devices.", "tags": ["CTF", "insider threat", "5 rooms", "DFIR"], "details": "type      CTF event (insider threat)\nrooms     5\nsetting   fictional breach at Nexora Technologies\nincludes  Red Rose Cyberforensics Workshop (DFIR)\nevidence  mobile, wearable and workstation devices (fabricated)\nstatus    completed\nrole      creator and organizer", "link": "", "image": "", "wide": true, "demo": ""}, {"title": "DarkWatchDog", "status": "demo", "desc": "A RAG-based analysis tool that checks leaked data. It looks up an email or domain against leak sources and answers questions about what was exposed. The demo below runs on made-up sample data, and nothing you type leaves this page.", "tags": ["RAG", "data leaks", "threat intel", "demo"], "details": "", "link": "", "image": "", "wide": true, "demo": "darkwatchdog"}, {"title": "Wi-Spy", "status": "contributor", "desc": "A wireless reconnaissance tool I contribute to.", "tags": ["wireless", "recon", "tooling"], "details": "type  wireless reconnaissance tool\nrole  contributor", "link": "", "image": "", "wide": false, "demo": ""}, {"title": "Wi-Spy 2.0", "status": "automated pentesting tool", "desc": "The upgrade of the wireless Wi-Spy tool. Version 2.0 automates the pentesting workflow and is built on a Raspberry Pi.", "tags": ["automation", "pentesting", "Raspberry Pi", "wireless"], "details": "type      automated pentesting tool\nplatform  Raspberry Pi\nlineage   upgrade of the wireless Wi-Spy tool", "link": "", "image": "", "wide": false, "demo": ""}], "experience": [{"role": "Freelance VAPT Analyst & Bug Bounty Hunter", "org": "", "period": "2023 to present", "points": ["Reported valid vulnerabilities focused on web application flaws such as XSS, IDOR and improper access control.", "Documented each finding with a clear proof of concept and recommended mitigations, following responsible disclosure practices."]}, {"role": "Cybersecurity Trainer", "org": "Offenso Hackers Academy", "period": "present", "points": ["Deliver hands-on training in ethical hacking, VAPT and web application security.", "Run workshops, CTF sessions and practical labs, and mentor students in penetration testing methodology and security best practices.", "Develop training materials and real-world cybersecurity challenges."]}, {"role": "R&D Head and Pentester", "org": "Cybernix", "period": "2024 to 2026", "points": ["Led cybersecurity R&D and built security tools and proofs of concept.", "Performed VAPT on web applications, APIs and networks.", "Researched emerging threats, validated vulnerabilities and delivered technical reports with remediation recommendations.", "Developed CTF challenges and mentored interns in offensive security."]}, {"role": "Cybersecurity Intern", "org": "Ugenix, healthcare app development project", "period": "2025 to 2026", "points": ["Worked with the development team to build security into the healthcare app from the ground up.", "Reviewed how data is stored, accessed and protected to keep patient information safe and compliant.", "Helped design and test authentication, authorization and other core security features.", "Contributed to threat modeling sessions and shared ideas to strengthen the app's defenses."]}], "wins": {"podium": [{"title": "Alibi CTF 2025", "place": "2nd", "tag": "CTF"}, {"title": "Chaithanya CTF", "place": "2nd", "tag": "CTF"}, {"title": "Tharang 2k26 Hackathon", "place": "2nd", "tag": "hackathon"}], "other": [{"title": "Valid disclosures", "text": "Valid vulnerabilities reported through responsible disclosure."}, {"title": "Awareness sessions", "text": "Hosted cybersecurity awareness sessions for IEEE and IEDC."}], "certs": [{"status": "earned", "name": "CRTA, Certified Red Team Analyst, CWL labs"}, {"status": "studying", "name": "CompTIA Security+"}]}};
+var CONTENT=DEFAULT_CONTENT;
+var DWD_HTML="<div class=\"dwd\">\n<p class=\"dwdlab\">darkwatchdog / demo &middot; sample data, simulated retrieval<\/p>\n<div class=\"dwdtabs\" role=\"tablist\" aria-label=\"Demo mode\">\n<button type=\"button\" role=\"tab\" id=\"tabChk\" data-m=\"chk\" aria-selected=\"false\">Check an email or domain<\/button>\n<button type=\"button\" role=\"tab\" id=\"tabAsk\" data-m=\"ask\" aria-selected=\"true\">Ask the leak<\/button>\n<\/div>\n<div id=\"paneAsk\">\n<div class=\"chips\" id=\"dwdChips\">\n<button type=\"button\" data-q=\"What data was exposed?\">What data was exposed?<\/button>\n<button type=\"button\" data-q=\"Is anything for sale?\">Is anything for sale?<\/button>\n<button type=\"button\" data-q=\"Were the passwords protected?\">Were the passwords protected?<\/button>\n<button type=\"button\" data-q=\"Any payment card data?\">Any payment card data?<\/button>\n<button type=\"button\" data-q=\"Where did it come from?\">Where did it come from?<\/button>\n<\/div>\n<form class=\"fform\" id=\"dwdForm\" autocomplete=\"off\" style=\"margin-top:0\">\n<label class=\"sr\" for=\"dwdIn\">Ask about the sample leak<\/label>\n<input id=\"dwdIn\" type=\"text\" placeholder=\"Ask about the sample leak\" spellcheck=\"false\">\n<button class=\"btn\" type=\"submit\">Ask<\/button>\n<\/form>\n<\/div>\n<div id=\"paneChk\" hidden>\n<div class=\"chips\" id=\"chkChips\">\n<button type=\"button\" data-q=\"demo@acme-retail.test\">demo@acme-retail.test<\/button>\n<button type=\"button\" data-q=\"sample@harbor-mail.test\">sample@harbor-mail.test<\/button>\n<button type=\"button\" data-q=\"acme-retail.test\">acme-retail.test<\/button>\n<button type=\"button\" data-q=\"someone@example.org\">someone@example.org<\/button>\n<\/div>\n<form class=\"fform\" id=\"chkForm\" autocomplete=\"off\" style=\"margin-top:0\">\n<label class=\"sr\" for=\"chkIn\">Email or domain to check<\/label>\n<input id=\"chkIn\" type=\"text\" placeholder=\"Enter an email or domain\" spellcheck=\"false\" autocapitalize=\"off\">\n<button class=\"btn\" type=\"submit\">Check<\/button>\n<\/form>\n<\/div>\n<div class=\"dwdout\" id=\"dwdOut\" aria-live=\"polite\"><\/div>\n<\/div>";
+var E=function(x){return esc(x==null?'':x)};
+function slug(x){return String(x||'').toLowerCase().replace(/[^a-z0-9.]+/g,'-').replace(/^-|-$/g,'')}
+function firstSentence(x){return String(x||'').split(/\.\s/)[0].replace(/\.$/,'')}
+function okImg(u){return /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(u||'')}
+function okLink(u){return /^https?:\/\/[^\s"<>]+$/.test(u||'')}
+function okFile(u){return /^[A-Za-z0-9_\-][A-Za-z0-9_.\-\/]*$/.test(u||'')&&String(u).indexOf('..')<0}
+function hash7(x){var h=2166136261;for(var i=0;i<x.length;i++){h^=x.charCodeAt(i);h=Math.imul(h,16777619)}return ('0000000'+(h>>>0).toString(16)).slice(-7)}
+function validContent(j){return !!(j&&Array.isArray(j.projects)&&Array.isArray(j.experience)&&j.wins&&Array.isArray(j.wins.podium)&&Array.isArray(j.wins.other)&&Array.isArray(j.wins.certs))}
+function loadContent(){
+  return new Promise(function(res){
+    if(!window.fetch||location.protocol==='file:'){res();return}
+    var done=false;
+    var t=setTimeout(function(){if(!done){done=true;res()}},2500);
+    fetch('content.json?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).then(function(j){
+      if(done)return;done=true;clearTimeout(t);
+      if(validContent(j))CONTENT=j;
+      res();
+    }).catch(function(){if(!done){done=true;clearTimeout(t);res()}});
+  });
+}
+function renderContent(){
+  var c=CONTENT,i;
+  var lb=$('#logBox');lb.innerHTML='';
+  c.experience.forEach(function(x,i){
+    var a=document.createElement('article');a.className='commit rv'+(i===0?' open':'');a.style.setProperty('--d',Math.min(i+1,4));
+    a.innerHTML='<button class="chead" type="button" aria-expanded="'+(i===0)+'"><span class="hash">'+hash7((x.role||'')+(x.period||''))+'</span><span class="ctitle">'+E(x.role)+'</span><span class="when">'+E(x.period)+'</span></button><div class="cbody"><div><div class="cin">'+(x.org?'<p class="org">'+E(x.org)+'</p>':'')+'<ul>'+(x.points||[]).map(function(t){return '<li>'+E(t)+'</li>'}).join('')+'</ul></div></div></div>';
+    lb.appendChild(a);
+  });
+  var pg=$('#projGrid');pg.innerHTML='';
+  c.projects.forEach(function(p,i){
+    var a=document.createElement('article');a.className='card rv';a.style.cssText='--d:'+Math.min(i+1,4)+(p.wide?';grid-column:1/-1':'');
+    var h='';
+    if(okImg(p.image))h+='<img class="pimg" src="'+p.image+'" alt="'+E(p.title)+' image" loading="lazy">';
+    h+='<h3>'+E(p.title)+'</h3>';
+    if(p.status)h+='<p class="st-line">'+E(p.status)+'</p>';
+    h+='<p>'+E(p.desc)+'</p>';
+    if(p.tags&&p.tags.length)h+='<div class="tags">'+p.tags.map(function(t){return '<span>'+E(t)+'</span>'}).join('')+'</div>';
+    if(okLink(p.link))h+='<p style="margin:12px 0 0"><a class="mini" href="'+E(p.link)+'" target="_blank" rel="noopener">view project</a></p>';
+    if(p.demo==='darkwatchdog'){h+=DWD_HTML;a.id='dwd'}
+    a.innerHTML=h;a._p=p;pg.appendChild(a);
+  });
+  var pod=$('#podium');pod.innerHTML='';
+  c.wins.podium.forEach(function(w,i){
+    var a=document.createElement('article');a.className='card rv';a.style.setProperty('--d',Math.min(i+1,4));
+    var m=/^(\d+)(\D.*)?$/.exec(String(w.place||'').trim());
+    a.setAttribute('data-toast',(w.title||'')+(w.place?': '+w.place+' place':''));
+    a.innerHTML='<p class="rank">'+(m?E(m[1])+'<small>'+E(m[2])+'</small>':E(w.place))+'</p><h3>'+E(w.title)+'</h3>'+(w.tag?'<div class="tags"><span>'+E(w.tag)+'</span></div>':'');
+    pod.appendChild(a);
+  });
+  var wo=$('#winsOther');wo.innerHTML='';
+  c.wins.other.forEach(function(o,i){
+    var a=document.createElement('article');a.className='card rv';a.style.setProperty('--d',Math.min(i+1,4));
+    a.innerHTML='<h3>'+E(o.title)+'</h3><p style="margin:0">'+E(o.text)+'</p>';wo.appendChild(a);
+  });
+  var cb=$('#certBox');$$('p:not(.cmd)',cb).forEach(function(p){p.remove()});
+  c.wins.certs.forEach(function(x){
+    var p=document.createElement('p');p.style.margin='0';
+    p.innerHTML='<span style="color:var(--'+(x.status==='earned'?'accent':'amber')+')">['+E(x.status)+']</span> '+E(x.name);cb.appendChild(p);
+  });
+  $('#cPod').setAttribute('data-count',c.wins.podium.length);
+  $('#cRoles').setAttribute('data-count',c.experience.length);
+  $('#cCert').setAttribute('data-count',c.wins.certs.filter(function(x){return x.status==='earned'}).length);
+  var r=c.resume,rb=$('#resumeBtn');
+  if(r&&r.enabled&&okFile(r.file)){rb.href=r.file;rb.textContent=r.label||'Resume';rb.hidden=false}else rb.hidden=true;
+}
+function bindContent(){
+  $$('.chead').forEach(function(b){b.addEventListener('click',function(){
+    var c=b.parentNode,open=!c.classList.contains('open');
+    c.classList.toggle('open',open);b.setAttribute('aria-expanded',String(open));
+  })});
+  $$('.card').forEach(function(c){c.addEventListener('pointermove',function(e){
+    var r=c.getBoundingClientRect();c.style.setProperty('--mx',(e.clientX-r.left)+'px');c.style.setProperty('--my',(e.clientY-r.top)+'px');
+  })});
+  $$('#projGrid .card').forEach(function(c){
+    var p=c._p;if(!p||!p.details)return;
+    var wrap=document.createElement('div');wrap.className='pdet';
+    wrap.innerHTML='<div><pre>'+E(p.details)+'</pre><p style="margin:10px 0 0"><button class="mini" type="button">run in shell</button></p></div>';
+    c.appendChild(wrap);
+    var h=document.createElement('p');h.className='hint';h.textContent='▸ click to inspect';c.appendChild(h);
+    $('button',wrap).addEventListener('click',function(e){e.stopPropagation();runInShell('projects')});
+    c.setAttribute('aria-expanded','false');
+    press(c,function(){var o=c.classList.toggle('open');c.setAttribute('aria-expanded',String(o));h.textContent=o?'▾ click to close':'▸ click to inspect'});
+  });
+  $$('#wins .card').forEach(function(c){
+    press(c,function(){
+      c.classList.remove('pulse');void c.offsetWidth;c.classList.add('pulse');
+      var t=c.getAttribute('data-toast');
+      if(t){toast(t);boost=Math.max(boost,1.2)}else runInShell('wins');
+    });
+  });
+  $$('#wins .win .wb p:not(.cmd)').forEach(function(p){press(p,function(){runInShell('certs')})});
+  if($('#dwd'))initDwd();
+}
+var ready=loadContent().then(function(){
+  try{renderContent()}catch(e){CONTENT=DEFAULT_CONTENT;renderContent()}
+  try{bindContent()}catch(e){}
+}).catch(function(){});
 /* back to top and keyboard shortcut */
 var topBtn=document.createElement('button');
 topBtn.id='topBtn';topBtn.type='button';topBtn.textContent='↑ top';topBtn.hidden=true;document.body.appendChild(topBtn);

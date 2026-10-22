@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "resume": {
+    "enabled": false,
+    "file": "resume.pdf",
+    "label": "Résumé"
+  },
+  "projects": [
+    {
+      "title": "Trazada Story",
+      "status": "completed, created and run by me",
+      "desc": "A five-room insider threat CTF event built around a fictional breach at Nexora Technologies. It included the Red Rose Cyberforensics Workshop, a DFIR training scenario with detailed fabricated evidence across mobile, wearable and workstation devices.",
+      "tags": [
+        "CTF",
+        "insider threat",
+        "5 rooms",
+        "DFIR"
+      ],
+      "details": "type      CTF event (insider threat)\nrooms     5\nsetting   fictional breach at Nexora Technologies\nincludes  Red Rose Cyberforensics Workshop (DFIR)\nevidence  mobile, wearable and workstation devices (fabricated)\nstatus    completed\nrole      creator and organizer",
+      "link": "",
+      "image": "",
+      "wide": true,
+      "demo": ""
+    },
+    {
+      "title": "DarkWatchDog",
+      "status": "demo",
+      "desc": "A RAG-based analysis tool that checks leaked data. It looks up an email or domain against leak sources and answers questions about what was exposed. The demo below runs on made-up sample data, and nothing you type leaves this page.",
+      "tags": [
+        "RAG",
+        "data leaks",
+        "threat intel",
+        "demo"
+      ],
+      "details": "",
+      "link": "",
+      "image": "",
+      "wide": true,
+      "demo": "darkwatchdog"
+    },
+    {
+      "title": "Wi-Spy",
+      "status": "contributor",
+      "desc": "A wireless reconnaissance tool I contribute to.",
+      "tags": [
+        "wireless",
+        "recon",
+        "tooling"
+      ],
+      "details": "type  wireless reconnaissance tool\nrole  contributor",
+      "link": "",
+      "image": "",
+      "wide": false,
+      "demo": ""
+    },
+    {
+      "title": "Wi-Spy 2.0",
+      "status": "automated pentesting tool",
+      "desc": "The upgrade of the wireless Wi-Spy tool. Version 2.0 automates the pentesting workflow and is built on a Raspberry Pi.",
+      "tags": [
+        "automation",
+        "pentesting",
+        "Raspberry Pi",
+        "wireless"
+      ],
+      "details": "type      automated pentesting tool\nplatform  Raspberry Pi\nlineage   upgrade of the wireless Wi-Spy tool",
+      "link": "",
+      "image": "",
+      "wide": false,
+      "demo": ""
+    }
+  ],
+  "experience": [
+    {
+      "role": "Freelance VAPT Analyst & Bug Bounty Hunter",
+      "org": "",
+      "period": "2023 to present",
+      "points": [
+        "Reported valid vulnerabilities focused on web application flaws such as XSS, IDOR and improper access control.",
+        "Documented each finding with a clear proof of concept and recommended mitigations, following responsible disclosure practices."
+      ]
+    },
+    {
+      "role": "Cybersecurity Trainer",
+      "org": "Offenso Hackers Academy",
+      "period": "present",
+      "points": [
+        "Deliver hands-on training in ethical hacking, VAPT and web application security.",
+        "Run workshops, CTF sessions and practical labs, and mentor students in penetration testing methodology and security best practices.",
+        "Develop training materials and real-world cybersecurity challenges."
+      ]
+    },
+    {
+      "role": "R&D Head and Pentester",
+      "org": "Cybernix",
+      "period": "2024 to 2026",
+      "points": [
+        "Led cybersecurity R&D and built security tools and proofs of concept.",
+        "Performed VAPT on web applications, APIs and networks.",
+        "Researched emerging threats, validated vulnerabilities and delivered technical reports with remediation recommendations.",
+        "Developed CTF challenges and mentored interns in offensive security."
+      ]
+    },
+    {
+      "role": "Cybersecurity Intern",
+      "org": "Ugenix, healthcare app development project",
+      "period": "2025 to 2026",
+      "points": [
+        "Worked with the development team to build security into the healthcare app from the ground up.",
+        "Reviewed how data is stored, accessed and protected to keep patient information safe and compliant.",
+        "Helped design and test authentication, authorization and other core security features.",
+        "Contributed to threat modeling sessions and shared ideas to strengthen the app's defenses."
+      ]
+    }
+  ],
+  "wins": {
+    "podium": [
+      {
+        "title": "Alibi CTF 2025",
+        "place": "2nd",
+        "tag": "CTF"
+      },
+      {
+        "title": "Chaithanya CTF",
+        "place": "2nd",
+        "tag": "CTF"
+      },
+      {
+        "title": "Tharang 2k26 Hackathon",
+        "place": "2nd",
+        "tag": "hackathon"
+      }
+    ],
+    "other": [
+      {
+        "title": "Valid disclosures",
+        "text": "Valid vulnerabilities reported through responsible disclosure."
+      },
+      {
+        "title": "Awareness sessions",
+        "text": "Hosted cybersecurity awareness sessions for IEEE and IEDC."
+      }
+    ],
+    "certs": [
+      {
+        "status": "earned",
+        "name": "CRTA, Certified Red Team Analyst, CWL labs"
+      },
+      {
+        "status": "studying",
+        "name": "CompTIA Security+"
+      }
+    ]
+  }
+}

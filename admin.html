@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#06090a">
+<title>mrz3r0 content dashboard</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=VT323&display=swap">
+<style>
+/* Layout: sticky header with tabs, one editing view per tab. Same terminal look as the portfolio. */
+:root{
+  --bg:#06090a;--panel:#0a110f;--field:#050a08;--line:#1c2d25;--line2:#2f5442;
+  --fg:#cfe0d6;--dim:#7a9488;--accent:#58f0a0;--red:#ff5468;--amber:#f2b84b;--cyan:#58c8f0;
+  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;--f-disp:'VT323',ui-monospace,Menlo,Consolas,monospace;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.65 var(--f-mono);-webkit-font-smoothing:antialiased}
+[hidden]{display:none!important}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.wrap{max-width:900px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:0;z-index:20;background:rgba(6,9,10,.95);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);border-bottom:1px solid var(--line);padding-top:env(safe-area-inset-top,0px)}
+.hrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;padding-block:12px}
+.ttl{font:400 28px/1 var(--f-disp);color:var(--accent);letter-spacing:.02em;margin-right:auto}
+.ttl small{font:400 12px var(--f-mono);color:var(--dim);margin-left:8px;letter-spacing:0}
+.acts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.stat{font-size:12px;color:var(--dim);padding:3px 10px;border:1px solid var(--line);border-radius:999px;white-space:nowrap}
+.stat.dirty{color:var(--amber);border-color:var(--amber)} .stat.ok{color:var(--accent);border-color:var(--accent)} .stat.err{color:var(--red);border-color:var(--red)}
+.btn{display:inline-block;background:none;border:1px solid var(--accent);color:var(--accent);padding:8px 14px;border-radius:5px;cursor:pointer;text-decoration:none;font-size:13px}
+.btn:hover{background:var(--accent);color:#04120a}
+.btn.alt{border-color:var(--line2);color:var(--fg)}
+.btn.alt:hover{border-color:var(--accent);background:none;color:var(--accent)}
+.mini{display:inline-block;background:none;border:1px solid var(--line);color:var(--dim);padding:3px 10px;border-radius:4px;cursor:pointer;font-size:12px}
+.mini:hover:not(:disabled){color:var(--accent);border-color:var(--accent)}
+.mini:disabled{opacity:.35;cursor:default}
+.mini.dng:hover:not(:disabled),.mini.dng.armed{color:var(--red);border-color:var(--red)}
+nav.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;padding-bottom:0}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{background:none;border:0;border-bottom:2px solid transparent;color:var(--dim);padding:8px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{color:var(--fg)}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+main{padding-block:24px 80px}
+h2{font:400 34px/1.05 var(--f-disp);margin:0 0 6px;letter-spacing:.02em}
+h3{font:400 24px/1.1 var(--f-disp);margin:26px 0 4px;letter-spacing:.02em;color:var(--accent)}
+.lead{color:var(--dim);margin:0 0 20px;max-width:64ch}
+#banner{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.note,.bn{border:1px solid var(--line2);background:var(--panel);border-radius:6px;padding:10px 14px;margin:0;color:#b4c8bc}
+.bn.err{border-color:var(--red);color:var(--fg)}
+.bn .r{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+details.item{border:1px solid var(--line);background:var(--panel);border-radius:8px;margin:0 0 10px}
+details.item[open]{border-color:var(--line2)}
+details.item>summary{cursor:pointer;padding:12px 16px;list-style:none;display:flex;align-items:center;gap:10px}
+details.item>summary::-webkit-details-marker{display:none}
+details.item>summary::before{content:"\25B8";color:var(--accent)}
+details.item[open]>summary::before{content:"\25BE"}
+.sumt{font-weight:700;overflow-wrap:anywhere}
+.pill{font-size:11px;color:var(--cyan);border:1px solid #1d3b49;border-radius:999px;padding:0 8px}
+.ib{padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px}
+.bar{display:flex;flex-wrap:wrap;gap:8px}
+.grid2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.grid3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}
+@media(max-width:640px){.grid2,.grid3{grid-template-columns:minmax(0,1fr)}}
+.fld{display:flex;flex-direction:column;gap:4px;min-width:0}
+.fld label,.lbl{font-size:12px;color:var(--dim)}
+.fld small{color:var(--dim);font-size:12px}
+.fld input[type=text],.fld select,.fld textarea{width:100%;background:var(--field);border:1px solid var(--line);border-radius:5px;padding:8px 11px;color:var(--fg)}
+.fld textarea{resize:vertical;line-height:1.55}
+.fld textarea.mono{font-size:12.5px}
+.fld input:focus,.fld select:focus,.fld textarea:focus{border-color:var(--accent);outline:none}
+.fld.chk{flex-direction:row;align-items:center;gap:10px}
+.fld.chk label{font-size:13px;color:var(--fg)}
+.fld.chk input{width:16px;height:16px;accent-color:var(--accent)}
+.prev{display:block;max-width:100%;max-height:150px;border:1px solid var(--line);border-radius:6px}
+.imgrow{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.row{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);background:var(--panel);border-radius:8px;padding:12px 14px;margin:0 0 10px}
+.steps{margin:0 0 18px;padding-left:20px;display:flex;flex-direction:column;gap:8px;max-width:64ch}
+.steps li::marker{color:var(--accent)}
+pre.json{margin:10px 0 0;max-height:320px;overflow:auto;background:var(--field);border:1px dashed var(--line2);border-radius:6px;padding:12px;font-size:12px;color:var(--amber);white-space:pre-wrap;word-break:break-word}
+.add{margin-top:6px}
+@media(max-width:700px){header.top{position:static}}
+a{color:var(--cyan)}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="hrow">
+      <div class="ttl">&gt;_ content dashboard<small>mrz3r0</small></div>
+      <div class="acts">
+        <span class="stat" id="stat" role="status">loading</span>
+        <label class="btn alt" for="loadFile">Load content.json</label>
+        <input type="file" id="loadFile" accept=".json,application/json" hidden>
+        <button class="btn" type="button" id="dl">Download content.json</button>
+      </div>
+    </div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Sections">
+      <button type="button" role="tab" data-t="projects">Projects</button>
+      <button type="button" role="tab" data-t="experience">Experience</button>
+      <button type="button" role="tab" data-t="wins">Achievements and certs</button>
+      <button type="button" role="tab" data-t="resume">Resume</button>
+      <button type="button" role="tab" data-t="publish">Publish</button>
+    </nav>
+  </div>
+</header>
+<main class="wrap">
+  <div id="banner" aria-live="polite"></div>
+  <section id="view"></section>
+</main>
+
+<script>
+(function(){
+'use strict';
+var DEFAULT={"version": 1, "resume": {"enabled": false, "file": "resume.pdf", "label": "Résumé"}, "projects": [{"title": "Trazada Story", "status": "completed, created and run by me", "desc": "A five-room insider threat CTF event built around a fictional breach at Nexora Technologies. It included the Red Rose Cyberforensics Workshop, a DFIR training scenario with detailed fabricated evidence across mobile, wearable and workstation devices.", "tags": ["CTF", "insider threat", "5 rooms", "DFIR"], "details": "type      CTF event (insider threat)\nrooms     5\nsetting   fictional breach at Nexora Technologies\nincludes  Red Rose Cyberforensics Workshop (DFIR)\nevidence  mobile, wearable and workstation devices (fabricated)\nstatus    completed\nrole      creator and organizer", "link": "", "image": "", "wide": true, "demo": ""}, {"title": "DarkWatchDog", "status": "demo", "desc": "A RAG-based analysis tool that checks leaked data. It looks up an email or domain against leak sources and answers questions about what was exposed. The demo below runs on made-up sample data, and nothing you type leaves this page.", "tags": ["RAG", "data leaks", "threat intel", "demo"], "details": "", "link": "", "image": "", "wide": true, "demo": "darkwatchdog"}, {"title": "Wi-Spy", "status": "contributor", "desc": "A wireless reconnaissance tool I contribute to.", "tags": ["wireless", "recon", "tooling"], "details": "type  wireless reconnaissance tool\nrole  contributor", "link": "", "image": "", "wide": false, "demo": ""}, {"title": "Wi-Spy 2.0", "status": "automated pentesting tool", "desc": "The upgrade of the wireless Wi-Spy tool. Version 2.0 automates the pentesting workflow and is built on a Raspberry Pi.", "tags": ["automation", "pentesting", "Raspberry Pi", "wireless"], "details": "type      automated pentesting tool\nplatform  Raspberry Pi\nlineage   upgrade of the wireless Wi-Spy tool", "link": "", "image": "", "wide": false, "demo": ""}], "experience": [{"role": "Freelance VAPT Analyst & Bug Bounty Hunter", "org": "", "period": "2023 to present", "points": ["Reported valid vulnerabilities focused on web application flaws such as XSS, IDOR and improper access control.", "Documented each finding with a clear proof of concept and recommended mitigations, following responsible disclosure practices."]}, {"role": "Cybersecurity Trainer", "org": "Offenso Hackers Academy", "period": "present", "points": ["Deliver hands-on training in ethical hacking, VAPT and web application security.", "Run workshops, CTF sessions and practical labs, and mentor students in penetration testing methodology and security best practices.", "Develop training materials and real-world cybersecurity challenges."]}, {"role": "R&D Head and Pentester", "org": "Cybernix", "period": "2024 to 2026", "points": ["Led cybersecurity R&D and built security tools and proofs of concept.", "Performed VAPT on web applications, APIs and networks.", "Researched emerging threats, validated vulnerabilities and delivered technical reports with remediation recommendations.", "Developed CTF challenges and mentored interns in offensive security."]}, {"role": "Cybersecurity Intern", "org": "Ugenix, healthcare app development project", "period": "2025 to 2026", "points": ["Worked with the development team to build security into the healthcare app from the ground up.", "Reviewed how data is stored, accessed and protected to keep patient information safe and compliant.", "Helped design and test authentication, authorization and other core security features.", "Contributed to threat modeling sessions and shared ideas to strengthen the app's defenses."]}], "wins": {"podium": [{"title": "Alibi CTF 2025", "place": "2nd", "tag": "CTF"}, {"title": "Chaithanya CTF", "place": "2nd", "tag": "CTF"}, {"title": "Tharang 2k26 Hackathon", "place": "2nd", "tag": "hackathon"}], "other": [{"title": "Valid disclosures", "text": "Valid vulnerabilities reported through responsible disclosure."}, {"title": "Awareness sessions", "text": "Hosted cybersecurity awareness sessions for IEEE and IEDC."}], "certs": [{"status": "earned", "name": "CRTA, Certified Red Team Analyst, CWL labs"}, {"status": "studying", "name": "CompTIA Security+"}]}};
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]})};
+var clone=function(o){return JSON.parse(JSON.stringify(o))};
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v);return true}catch(e){return false}}
+var DRAFT='mrz3r0_admin_draft_v1';
+var FILE_RE=/^[A-Za-z0-9_\-][A-Za-z0-9_.\-\/]*$/;
+var TPL={
+  'projects':{title:'New project',status:'',desc:'',tags:[],details:'',link:'',image:'',wide:false,demo:''},
+  'experience':{role:'New role',org:'',period:'',points:[]},
+  'wins.podium':{title:'',place:'1st',tag:''},
+  'wins.other':{title:'',text:''},
+  'wins.certs':{status:'studying',name:''}
+};
+var state=null,live=null,fromSite=false,tab='projects',openKeys={},resumeFile=null,downloaded='',timer=null,statTimer=null;
+
+function valid(j){return !!(j&&Array.isArray(j.projects)&&Array.isArray(j.experience)&&j.wins&&Array.isArray(j.wins.podium)&&Array.isArray(j.wins.other)&&Array.isArray(j.wins.certs))}
+function normalize(j){
+  var o=clone(j);
+  o.version=1;
+  o.resume=Object.assign({enabled:false,file:'resume.pdf',label:'Resume'},o.resume||{});
+  o.projects=o.projects.map(function(p){return Object.assign({},TPL.projects,p,{tags:Array.isArray(p.tags)?p.tags:[]})});
+  o.experience=o.experience.map(function(x){return Object.assign({},TPL.experience,x,{points:Array.isArray(x.points)?x.points:[]})});
+  o.wins.podium=o.wins.podium.map(function(x){return Object.assign({},TPL['wins.podium'],x)});
+  o.wins.other=o.wins.other.map(function(x){return Object.assign({},TPL['wins.other'],x)});
+  o.wins.certs=o.wins.certs.map(function(x){return Object.assign({},TPL['wins.certs'],x)});
+  return o;
+}
+function get(path){var o=state;path.split('.').forEach(function(k){o=o==null?o:o[k]});return o}
+function setPath(path,val){var p=path.split('.'),o=state;for(var i=0;i<p.length-1;i++)o=o[p[i]];o[p[p.length-1]]=val}
+function snap(){return JSON.stringify(state)}
+function kb(u){return Math.round(String(u).length*0.75/1024)}
+function okImg(u){return /^data:image\/(png|jpe?g|webp|gif);base64,[A-Za-z0-9+\/=]+$/.test(u||'')}
+
+/* ---------- status, banner ---------- */
+function setStat(text,cls){var s=$('#stat');s.textContent=text;s.className='stat'+(cls?' '+cls:'')}
+function updateStatus(){
+  if(!state)return;
+  var now=snap();
+  if(downloaded&&downloaded===now)setStat('downloaded, ready to upload','ok');
+  else if(live&&now!==JSON.stringify(live))setStat('unsaved changes','dirty');
+  else setStat(fromSite?'matches your site':'built-in copy loaded','');
+}
+function flash(text,cls){setStat(text,cls);clearTimeout(statTimer);statTimer=setTimeout(updateStatus,3500)}
+function banner(html,err){var b=$('#banner');b.innerHTML=html?'<div class="bn'+(err?' err':'')+'">'+html+'</div>':''}
+function dirty(){
+  clearTimeout(timer);
+  timer=setTimeout(function(){
+    updateStatus();
+    var ok=ls(DRAFT,JSON.stringify({t:Date.now(),data:state}));
+    if(ok===false)flash('draft not kept (browser storage full)','err');
+  },300);
+}
+
+/* ---------- field helpers ---------- */
+function fld(label,path,kind,o){
+  o=o||{};var id='f_'+path.replace(/\./g,'_'),v=get(path),h;
+  if(kind==='bool')return '<div class="fld chk"><input type="checkbox" id="'+id+'" data-p="'+path+'" data-k="bool"'+(v?' checked':'')+'><label for="'+id+'">'+esc(label)+'</label></div>';
+  h='<div class="fld"><label for="'+id+'">'+esc(label)+'</label>';
+  if(kind==='area'||kind==='lines'){
+    var val=kind==='lines'?(v||[]).join('\n'):(v||'');
+    h+='<textarea id="'+id+'" data-p="'+path+'" data-k="'+kind+'" rows="'+(o.rows||4)+'"'+(o.mono?' class="mono"':'')+'>'+esc(val)+'</textarea>';
+  }else if(kind==='select'){
+    h+='<select id="'+id+'" data-p="'+path+'" data-k="text">'+o.options.map(function(x){return '<option value="'+x+'"'+(v===x?' selected':'')+'>'+x+'</option>'}).join('')+'</select>';
+  }else{
+    var tv=kind==='tags'?(v||[]).join(', '):(v||'');
+    h+='<input type="text" id="'+id+'" data-p="'+path+'" data-k="'+kind+'" value="'+esc(tv)+'" autocomplete="off" spellcheck="false">';
+  }
+  if(o.help)h+='<small>'+esc(o.help)+'</small>';
+  return h+'</div>';
+}
+function bar(list,i,n){
+  var d=' data-list="'+list+'" data-i="'+i+'"';
+  return '<div class="bar"><button type="button" class="mini" data-act="up"'+d+(i===0?' disabled':'')+'>move up</button>'+
+    '<button type="button" class="mini" data-act="down"'+d+(i===n-1?' disabled':'')+'>move down</button>'+
+    '<button type="button" class="mini dng" data-act="del"'+d+'>delete</button></div>';
+}
+function row(list,i,n,fields,cls){return '<div class="row"><div class="'+(cls||'grid3')+'">'+fields+'</div>'+bar(list,i,n)+'</div>'}
+function addBtn(list,label){return '<button type="button" class="btn alt add" data-act="add" data-list="'+list+'">+ '+label+'</button>'}
+
+/* ---------- views ---------- */
+function vProjects(){
+  var a=state.projects,h='<h2>Projects</h2><p class="lead">Each project becomes a card on your site. Visitors can click a card to open its details.</p>';
+  a.forEach(function(p,i){
+    var key='projects.'+i;
+    h+='<details class="item" data-key="'+key+'"'+(openKeys[key]?' open':'')+'><summary><span class="sumt" data-sum="'+key+'.title">'+esc(p.title||'Untitled')+'</span>'+(p.demo?'<span class="pill">demo attached</span>':'')+'</summary><div class="ib">'+bar('projects',i,a.length)+
+      '<div class="grid2">'+fld('Title',key+'.title','text')+fld('Status line',key+'.status','text',{help:'Short label under the title, such as "completed" or "in progress".'})+'</div>'+
+      fld('Description',key+'.desc','area',{rows:4})+
+      '<div class="grid2">'+fld('Tags',key+'.tags','tags',{help:'Separate with commas.'})+fld('Link',key+'.link','text',{help:'Optional. Must start with https://'})+'</div>'+
+      fld('Details shown on click',key+'.details','area',{rows:5,mono:true,help:'Optional. One fact per line, such as "platform  Raspberry Pi". Leave empty for no details panel.'})+
+      fld('Show full width',key+'.wide','bool')+
+      '<div class="fld"><span class="lbl">Image</span><div class="imgrow">'+
+        (okImg(p.image)?'<img class="prev" src="'+p.image+'" alt=""><small>'+kb(p.image)+' KB</small><button type="button" class="mini dng" data-act="img-clear" data-i="'+i+'">remove image</button>':'<small>No image yet.</small>')+
+        '<label class="mini" for="img_'+i+'">Choose image</label><input type="file" id="img_'+i+'" data-img="'+i+'" accept="image/png,image/jpeg,image/webp,image/gif" hidden></div>'+
+        '<small>Images are shrunk to 900 pixels wide and stored inside content.json, so there is no extra file to upload.</small></div>'+
+      (p.demo?'<p class="note">This project includes the built-in DarkWatchDog demo. Keep this entry to keep the demo on your site.</p>':'')+
+      '</div></details>';
+  });
+  return h+addBtn('projects','Add project');
+}
+function vExperience(){
+  var a=state.experience,h='<h2>Experience</h2><p class="lead">Your work history. The first entry opens by default on the site.</p>';
+  a.forEach(function(x,i){
+    var key='experience.'+i;
+    h+='<details class="item" data-key="'+key+'"'+(openKeys[key]?' open':'')+'><summary><span class="sumt" data-sum="'+key+'.role">'+esc(x.role||'Untitled')+'</span></summary><div class="ib">'+bar('experience',i,a.length)+
+      '<div class="grid2">'+fld('Role',key+'.role','text')+fld('Period',key+'.period','text',{help:'Such as "2024 to 2026" or "present".'})+'</div>'+
+      fld('Organisation',key+'.org','text',{help:'Optional.'})+
+      fld('What you did',key+'.points','lines',{rows:6,help:'One point per line.'})+'</div></details>';
+  });
+  return h+addBtn('experience','Add role');
+}
+function vWins(){
+  var w=state.wins,h='<h2>Achievements and certs</h2><p class="lead">Podium finishes, other highlights and certifications.</p>';
+  h+='<h3>Podium finishes</h3><p class="lead">Large cards at the top of the section.</p>';
+  w.podium.forEach(function(x,i){var k='wins.podium.'+i;h+=row('wins.podium',i,w.podium.length,fld('Event',k+'.title','text')+fld('Place',k+'.place','text',{help:'1st, 2nd, 3rd'})+fld('Tag',k+'.tag','text'))});
+  h+=addBtn('wins.podium','Add finish');
+  h+='<h3>Other highlights</h3><p class="lead">Smaller cards below the podium.</p>';
+  w.other.forEach(function(x,i){var k='wins.other.'+i;h+=row('wins.other',i,w.other.length,fld('Title',k+'.title','text')+fld('Text',k+'.text','text'),'grid2')});
+  h+=addBtn('wins.other','Add highlight');
+  h+='<h3>Certifications</h3><p class="lead">Shown as a list. Earned items are green, others are amber.</p>';
+  w.certs.forEach(function(x,i){var k='wins.certs.'+i;h+=row('wins.certs',i,w.certs.length,fld('Status',k+'.status','select',{options:['earned','studying','planned']})+fld('Name',k+'.name','text'),'grid2')});
+  return h+addBtn('wins.certs','Add certification');
+}
+function vResume(){
+  var r=state.resume;
+  return '<h2>Resume</h2><p class="lead">Adds a Resume button to the top of your site and a <b>resume</b> command in the shell.</p>'+
+    '<div class="ib" style="padding:0">'+fld('Show the resume button','resume.enabled','bool')+
+    '<div class="grid2">'+fld('Button text','resume.label','text')+fld('File name on your site','resume.file','text',{help:'Upload your PDF next to index.html with exactly this name.'})+'</div>'+
+    '<div class="fld"><span class="lbl">Your PDF</span><div class="imgrow"><label class="mini" for="resumePick">Choose PDF</label><input type="file" id="resumePick" accept="application/pdf,.pdf" hidden>'+
+    (resumeFile?'<small>'+esc(resumeFile.name)+' ('+Math.round(resumeFile.size/1024)+' KB)</small><button type="button" class="btn" data-act="resume-dl">Download as '+esc(r.file)+'</button><button type="button" class="mini" data-act="resume-clear">clear</button>':'<small>Pick your PDF to get a copy saved under the right file name.</small>')+
+    '</div></div></div>';
+}
+function vPublish(){
+  var j=JSON.stringify(state,null,2);
+  return '<h2>Publish your changes</h2><p class="lead">This page cannot change your live site by itself. Your changes go live when you upload the files to GitHub.</p>'+
+    '<ol class="steps"><li>Click <b>Download content.json</b> at the top of this page.</li>'+
+    '<li>If you changed the resume, also use <b>Download as '+esc(state.resume.file)+'</b> on the Resume tab.</li>'+
+    '<li>Open your GitHub repository, choose <b>Add file</b>, then <b>Upload files</b>.</li>'+
+    '<li>Drag in the downloaded files. Keep the same names so they replace the old ones, then commit the changes.</li>'+
+    '<li>Wait about a minute, then reload your site.</li></ol>'+
+    '<p class="note">Edits are kept as a draft in this browser while you work, so closing the tab does not lose them.</p>'+
+    '<details class="item" style="margin-top:16px"><summary><span class="sumt">Show the JSON</span></summary><div class="ib"><div class="bar"><button type="button" class="mini" data-act="copy-json">copy</button></div><pre class="json" id="jsonOut">'+esc(j)+'</pre></div></details>';
+}
+var VIEWS={projects:vProjects,experience:vExperience,wins:vWins,resume:vResume,publish:vPublish};
+function draw(){
+  $$('#tabs button').forEach(function(b){b.setAttribute('aria-selected',String(b.getAttribute('data-t')===tab))});
+  $('#view').innerHTML=VIEWS[tab]();
+}
+
+/* ---------- editing ---------- */
+$('#view').addEventListener('input',function(e){
+  var t=e.target,p=t.getAttribute&&t.getAttribute('data-p');if(!p)return;
+  var k=t.getAttribute('data-k'),v;
+  if(k==='bool')v=t.checked;
+  else if(k==='tags')v=t.value.split(',').map(function(x){return x.trim()}).filter(Boolean);
+  else if(k==='lines')v=t.value.split('\n').map(function(x){return x.trim()}).filter(Boolean);
+  else v=t.value;
+  setPath(p,v);
+  var s=$('[data-sum="'+p+'"]');if(s)s.textContent=String(v).trim()||'Untitled';
+  dirty();
+});
+$('#view').addEventListener('toggle',function(e){
+  var d=e.target;if(!d.getAttribute||!d.getAttribute('data-key'))return;
+  if(d.open)openKeys[d.getAttribute('data-key')]=1;else delete openKeys[d.getAttribute('data-key')];
+},true);
+function swap(a,i,j){var t=a[i];a[i]=a[j];a[j]=t}
+$('#view').addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var act=b.getAttribute('data-act'),list=b.getAttribute('data-list'),i=+b.getAttribute('data-i'),arr=list?get(list):null;
+  if(act==='add'){arr.push(clone(TPL[list]));openKeys={};openKeys[list+'.'+(arr.length-1)]=1;dirty();draw();
+    var last=$$('details.item[open]').pop();if(last)last.scrollIntoView({block:'center'})}
+  else if(act==='up'&&i>0){swap(arr,i,i-1);openKeys={};openKeys[list+'.'+(i-1)]=1;dirty();draw()}
+  else if(act==='down'&&i<arr.length-1){swap(arr,i,i+1);openKeys={};openKeys[list+'.'+(i+1)]=1;dirty();draw()}
+  else if(act==='del'){
+    if(!b.classList.contains('armed')){b.classList.add('armed');b.textContent='click again to delete';setTimeout(function(){b.classList.remove('armed');b.textContent='delete'},3000);return}
+    arr.splice(i,1);openKeys={};dirty();draw();
+  }
+  else if(act==='img-clear'){state.projects[i].image='';openKeys={};openKeys['projects.'+i]=1;dirty();draw()}
+  else if(act==='resume-dl')downloadResume();
+  else if(act==='resume-clear'){resumeFile=null;draw()}
+  else if(act==='copy-json'){
+    var txt=JSON.stringify(state,null,2);
+    try{navigator.clipboard.writeText(txt).then(function(){flash('copied','ok')},function(){selectJson()})}catch(err){selectJson()}
+  }
+});
+function selectJson(){var el=$('#jsonOut');if(!el)return;var r=document.createRange();r.selectNodeContents(el);var s=getSelection();s.removeAllRanges();s.addRange(r);flash('selected, press copy on your keyboard','')}
+$('#view').addEventListener('change',function(e){
+  var t=e.target;
+  if(t.hasAttribute&&t.hasAttribute('data-img')){
+    var i=+t.getAttribute('data-img'),f=t.files&&t.files[0];if(!f)return;
+    shrink(f,function(err,uri){
+      if(err){banner(esc(err),true);return}
+      banner('');state.projects[i].image=uri;openKeys={};openKeys['projects.'+i]=1;
+      if(kb(uri)>400)banner('That image is '+kb(uri)+' KB after shrinking. A smaller or simpler picture keeps your site fast.',false);
+      dirty();draw();
+    });
+  }else if(t.id==='resumePick'){
+    var f2=t.files&&t.files[0];if(!f2)return;
+    if(!/\.pdf$/i.test(f2.name)&&f2.type!=='application/pdf'){banner('That file is not a PDF.',true);return}
+    if(f2.size>10*1024*1024){banner('That PDF is over 10 MB. Compress it first so it loads quickly.',true);return}
+    banner('');resumeFile=f2;draw();
+  }
+});
+function shrink(file,cb){
+  if(!/^image\/(png|jpeg|webp|gif)$/.test(file.type)){cb('Use a PNG, JPEG, WebP or GIF image.');return}
+  var u=URL.createObjectURL(file),img=new Image();
+  img.onload=function(){
+    var max=900,sc=Math.min(1,max/img.width),c=document.createElement('canvas');
+    c.width=Math.max(1,Math.round(img.width*sc));c.height=Math.max(1,Math.round(img.height*sc));
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    var d=c.toDataURL('image/webp',.82);if(d.indexOf('data:image/webp')!==0)d=c.toDataURL('image/jpeg',.82);
+    URL.revokeObjectURL(u);cb(null,d);
+  };
+  img.onerror=function(){URL.revokeObjectURL(u);cb('That image could not be read.')};
+  img.src=u;
+}
+function saveBlob(name,type,data){
+  var u=URL.createObjectURL(new Blob([data],{type:type})),a=document.createElement('a');
+  a.href=u;a.download=name;document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(u)},3000);
+}
+function downloadResume(){
+  if(!resumeFile)return;
+  if(!FILE_RE.test(state.resume.file)||!/\.pdf$/i.test(state.resume.file)){banner('The resume file name must end in .pdf and use only letters, numbers, dots, dashes and underscores.',true);return}
+  saveBlob(state.resume.file,'application/pdf',resumeFile);
+}
+
+/* ---------- download, load ---------- */
+function problems(){
+  var e=[];
+  state.projects.forEach(function(p,i){
+    if(!String(p.title||'').trim())e.push('Project '+(i+1)+' needs a title.');
+    if(p.link&&!/^https?:\/\/[^\s"<>]+$/.test(p.link))e.push('The link on "'+(p.title||'project '+(i+1))+'" must start with http:// or https://');
+  });
+  state.experience.forEach(function(x,i){if(!String(x.role||'').trim())e.push('Role '+(i+1)+' needs a title.')});
+  state.wins.podium.forEach(function(x,i){if(!String(x.title||'').trim())e.push('Podium finish '+(i+1)+' needs an event name.')});
+  state.wins.other.forEach(function(x,i){if(!String(x.title||'').trim())e.push('Highlight '+(i+1)+' needs a title.')});
+  state.wins.certs.forEach(function(x,i){if(!String(x.name||'').trim())e.push('Certification '+(i+1)+' needs a name.')});
+  if(state.resume.enabled&&(!FILE_RE.test(state.resume.file)||!/\.pdf$/i.test(state.resume.file)))e.push('The resume file name must end in .pdf and use only letters, numbers, dots, dashes and underscores.');
+  return e;
+}
+$('#dl').addEventListener('click',function(){
+  var e=problems();
+  if(e.length){banner('<b>Fix these before downloading:</b><br>'+e.map(esc).join('<br>'),true);return}
+  var json=JSON.stringify(state,null,2);
+  saveBlob('content.json','application/json',json);
+  downloaded=snap();updateStatus();
+  var size=Math.round(json.length/1024);
+  banner(size>1500?'content.json is '+size+' KB. Large images make the site slower. Consider removing or shrinking some.':'');
+  flash('downloaded, ready to upload','ok');
+});
+$('#loadFile').addEventListener('change',function(e){
+  var f=e.target.files&&e.target.files[0];if(!f)return;
+  var r=new FileReader();
+  r.onload=function(){
+    try{var j=JSON.parse(r.result);if(!valid(j))throw new Error('shape');state=normalize(j);openKeys={};banner('');dirty();draw();flash('loaded '+f.name,'ok')}
+    catch(err){banner('That file is not a valid content.json. It needs projects, experience and wins.',true)}
+    e.target.value='';
+  };
+  r.readAsText(f);
+});
+$('#tabs').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;tab=b.getAttribute('data-t');draw()});
+
+/* ---------- start ---------- */
+function fetchLive(){
+  if(!window.fetch||location.protocol==='file:')return Promise.resolve(null);
+  return fetch('content.json?v='+Date.now(),{cache:'no-store'}).then(function(r){return r.ok?r.json():null}).catch(function(){return null});
+}
+fetchLive().then(function(j){
+  fromSite=valid(j);
+  live=normalize(fromSite?j:DEFAULT);
+  state=clone(live);
+  var d=null;try{d=JSON.parse(ls(DRAFT)||'null')}catch(e){d=null}
+  if(d&&valid(d.data)&&JSON.stringify(normalize(d.data))!==JSON.stringify(live)){
+    banner('You have unsaved edits from '+esc(new Date(d.t).toLocaleString())+'.<div class="r"><button type="button" class="btn" id="restore">Restore them</button><button type="button" class="btn alt" id="discard">Discard</button></div>');
+    $('#restore').addEventListener('click',function(){state=normalize(d.data);banner('');openKeys={};draw();updateStatus()});
+    $('#discard').addEventListener('click',function(){ls(DRAFT,null);banner('')});
+  }else ls(DRAFT,null);
+  draw();updateStatus();
+  if(!fromSite)flash('built-in copy loaded','');
+});
+})();
+</script>
+</body>
+</html>
